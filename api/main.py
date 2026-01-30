@@ -85,8 +85,11 @@ engine = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global engine
+    conn_str = _conn_string()
+    print(f"STARTUP: Connecting to DB host: {conn_str.split('@')[1].split('/')[0] if '@' in conn_str else 'NO @ IN URL'}", flush=True)
+    print(f"STARTUP: DATABASE_URL env set: {bool(os.environ.get('DATABASE_URL'))}", flush=True)
     engine = create_engine(
-        _conn_string(),
+        conn_str,
         pool_size=5,
         max_overflow=10,
         pool_pre_ping=True,
