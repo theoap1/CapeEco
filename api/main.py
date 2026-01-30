@@ -63,7 +63,9 @@ SCHEMA = "capeeco"
 
 def _conn_string():
     # Check all possible env var names for database URL
-    db_url = os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_PRIVATE_URL") or ""
+    raw = os.environ.get("DATABASE_URL")
+    print(f"STARTUP: raw DATABASE_URL type={type(raw)} len={len(raw) if raw else 0} repr={repr(raw[:30]) if raw else 'None'}", flush=True)
+    db_url = raw or os.environ.get("DATABASE_PRIVATE_URL") or ""
     if db_url:
         # Railway uses postgres:// but SQLAlchemy requires postgresql://
         if db_url.startswith("postgres://"):
