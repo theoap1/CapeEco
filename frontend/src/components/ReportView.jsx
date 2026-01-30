@@ -326,12 +326,26 @@ async function exportToPDF(contentRef, reportData) {
   // Add print class for styling adjustments
   el.classList.add('printing');
 
+  // Temporarily expand the scroll container so html2canvas captures all content
+  const scrollParent = el.closest('.report-content-wrapper');
+  const modalBox = el.closest('.max-h-\\[95vh\\]');
+  const savedStyles = [];
+  for (const node of [scrollParent, modalBox]) {
+    if (node) {
+      savedStyles.push({ node, maxHeight: node.style.maxHeight, overflow: node.style.overflow, height: node.style.height });
+      node.style.maxHeight = 'none';
+      node.style.overflow = 'visible';
+      node.style.height = 'auto';
+    }
+  }
+
   try {
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageWidth = 210;
     const pageHeight = 297;
     const margin = 15;
     const contentWidth = pageWidth - (margin * 2);
+    const usableHeight = pageHeight - (margin * 2);
 
     // Capture at high DPI
     const canvas = await html2canvas(el, {
@@ -340,18 +354,19 @@ async function exportToPDF(contentRef, reportData) {
       logging: false,
       backgroundColor: '#ffffff',
       windowWidth: 794, // A4 at 96dpi
+      scrollY: -window.scrollY,
     });
 
     const imgWidth = contentWidth;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const totalPages = Math.ceil(imgHeight / (pageHeight - margin * 2));
+    const totalPages = Math.ceil(imgHeight / usableHeight);
 
     for (let page = 0; page < totalPages; page++) {
       if (page > 0) pdf.addPage();
 
       // Clip and draw portion of canvas for this page
-      const srcY = page * (canvas.width * (pageHeight - margin * 2) / imgWidth);
-      const srcH = canvas.width * (pageHeight - margin * 2) / imgWidth;
+      const srcY = page * (canvas.width * usableHeight / imgWidth);
+      const srcH = canvas.width * usableHeight / imgWidth;
 
       const pageCanvas = document.createElement('canvas');
       pageCanvas.width = canvas.width;
@@ -374,6 +389,12 @@ async function exportToPDF(contentRef, reportData) {
     const fileName = `CapeEco_Report_${reportData.property.erf_number}_${reportData.property.suburb.replace(/\s+/g, '_')}.pdf`;
     pdf.save(fileName);
   } finally {
+    // Restore scroll container styles
+    for (const { node, maxHeight, overflow, height } of savedStyles) {
+      node.style.maxHeight = maxHeight;
+      node.style.overflow = overflow;
+      node.style.height = height;
+    }
     el.classList.remove('printing');
     if (wasDark) root.classList.add('dark');
   }
@@ -449,7 +470,7 @@ export default function ReportView({ propertyId, onClose }) {
   const wat = netzero?.water;
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-black/50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[2000] bg-black/50 flex items-center justify-center p-4 report-modal">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
         {/* Toolbar */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-ocean-600 to-ocean-700 shrink-0">
@@ -481,7 +502,7 @@ export default function ReportView({ propertyId, onClose }) {
         </div>
 
         {/* Report Content (scrollable) */}
-        <div className="flex-1 overflow-y-auto sidebar-scroll">
+        <div className="flex-1 overflow-y-auto sidebar-scroll report-content-wrapper">
           <div ref={contentRef} className="report-content max-w-[794px] mx-auto p-8 space-y-6">
 
             {/* ─── HEADER / COVER ─── */}

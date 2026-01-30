@@ -73,6 +73,22 @@
 @media print {
   body * { visibility: hidden; }
   .report-content, .report-content * { visibility: visible; }
-  .report-content { position: absolute; left: 0; top: 0; width: 100%; }
+  .report-content {
+    position: absolute; left: 0; top: 0; width: 100%;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  /* Remove modal constraints so full report prints */
+  .report-content-wrapper {
+    max-height: none !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .report-modal {
+    position: absolute !important;
+    max-height: none !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
   .report-section { break-inside: avoid; }
 }
