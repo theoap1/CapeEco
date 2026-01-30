@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Leaf, Mail, Lock, User, Loader2, AlertTriangle } from 'lucide-react';
 
 export default function LoginPage() {
-  const { login, register } = useAuth();
+  const { login, register, isAuthenticated } = useAuth();
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,6 +29,8 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (isAuthenticated) return <Navigate to="/" replace />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-ocean-600 via-ocean-700 to-ocean-900 flex items-center justify-center p-4">
