@@ -63,9 +63,19 @@ SCHEMA = "capeeco"
 
 def _conn_string():
     # Check all possible env var names for database URL
+    # Railway sometimes adds whitespace to env var keys — check all variants
     raw = os.environ.get("DATABASE_URL")
-    print(f"STARTUP: raw DATABASE_URL type={type(raw)} len={len(raw) if raw else 0} repr={repr(raw[:30]) if raw else 'None'}", flush=True)
-    db_url = raw or os.environ.get("DATABASE_PRIVATE_URL") or ""
+    if raw is None:
+        # Scan for DATABASE_URL with trailing whitespace in key
+        for k, v in os.environ.items():
+            if k.strip() == "DATABASE_URL":
+                raw = v
+                print(f"STARTUP: found DATABASE_URL with whitespace in key: repr(key)={repr(k)}", flush=True)
+                break
+    if raw is None:
+        raw = os.environ.get("DATABASE_PRIVATE_URL")
+    print(f"STARTUP: resolved DATABASE_URL len={len(raw) if raw else 0}", flush=True)
+    db_url = raw or ""
     if db_url:
         # Railway uses postgres:// but SQLAlchemy requires postgresql://
         if db_url.startswith("postgres://"):
