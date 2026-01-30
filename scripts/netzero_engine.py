@@ -165,6 +165,17 @@ _engine = None
 
 
 def _conn_string(dbname=None):
+    # Check DATABASE_URL first (Railway deployment)
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url is None:
+        for k, v in os.environ.items():
+            if k.strip() == "DATABASE_URL":
+                db_url = v
+                break
+    if db_url:
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+        return db_url
     db = dbname or DB_NAME
     if DB_PASSWORD:
         return f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{db}"
