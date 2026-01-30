@@ -62,21 +62,23 @@ SCHEMA = "capeeco"
 
 
 def _conn_string():
-    db_url = os.environ.get("DATABASE_URL", "")
+    # Check all possible env var names for database URL
+    db_url = os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_PRIVATE_URL") or ""
     if db_url:
         # Railway uses postgres:// but SQLAlchemy requires postgresql://
         if db_url.startswith("postgres://"):
             db_url = db_url.replace("postgres://", "postgresql://", 1)
-        logger.info("Using DATABASE_URL: %s...%s", db_url[:25], db_url[-15:])
+        print(f"STARTUP: Using DATABASE_URL -> {db_url.split('@')[1].split('/')[0] if '@' in db_url else '?'}", flush=True)
         return db_url
+    # Fallback to individual PG* env vars
     pw = os.environ.get("PGPASSWORD", "")
     host = os.environ.get("PGHOST", "localhost")
     port = os.environ.get("PGPORT", "5432")
     user = os.environ.get("PGUSER", os.environ.get("USER", "postgres"))
     name = os.environ.get("PGDATABASE", "capeeco")
-    if pw:
-        return f"postgresql://{user}:{pw}@{host}:{port}/{name}"
-    return f"postgresql://{user}@{host}:{port}/{name}"
+    url = f"postgresql://{user}:{pw}@{host}:{port}/{name}" if pw else f"postgresql://{user}@{host}:{port}/{name}"
+    print(f"STARTUP: Using PG* vars -> {host}:{port}/{name}", flush=True)
+    return url
 
 
 engine = None
@@ -85,9 +87,12 @@ engine = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global engine
+    # Debug: print all env vars containing DB/PG/DATABASE
+    for k, v in sorted(os.environ.items()):
+        if any(x in k.upper() for x in ['DB', 'PG', 'DATABASE', 'POSTGRES']):
+            safe_v = v[:20] + '...' if len(v) > 20 else v
+            print(f"STARTUP ENV: {k}={safe_v}", flush=True)
     conn_str = _conn_string()
-    print(f"STARTUP: Connecting to DB host: {conn_str.split('@')[1].split('/')[0] if '@' in conn_str else 'NO @ IN URL'}", flush=True)
-    print(f"STARTUP: DATABASE_URL env set: {bool(os.environ.get('DATABASE_URL'))}", flush=True)
     engine = create_engine(
         conn_str,
         pool_size=5,
