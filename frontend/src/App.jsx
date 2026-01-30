@@ -1,0 +1,126 @@
+import { useState, useCallback } from 'react';
+import { Moon, Sun, Leaf } from 'lucide-react';
+import AddressSearchBar from './components/AddressSearchBar';
+import InteractiveMap from './components/InteractiveMap';
+import PropertySidebar from './components/PropertySidebar';
+import LayerControl from './components/LayerControl';
+import { useDarkMode } from './hooks/useDarkMode';
+import { getProperty } from './utils/api';
+
+function App() {
+  const [dark, setDark] = useDarkMode();
+  const [selectedPropertyId, setSelectedPropertyId] = useState(null);
+  const [flyTo, setFlyTo] = useState(null);
+  const [selectedGeometry, setSelectedGeometry] = useState(null);
+  const [constraintMapData, setConstraintMapData] = useState(null);
+  const [layers, setLayers] = useState({
+    biodiversity: { active: true, label: 'Biodiversity (CBA/ESA)' },
+  });
+
+  const handleSearchSelect = useCallback(async (result) => {
+    setSelectedPropertyId(result.id);
+    setConstraintMapData(null);
+    if (result.centroid_lat && result.centroid_lon) {
+      setFlyTo({ center: [result.centroid_lat, result.centroid_lon], zoom: 17 });
+    }
+    // Fetch geometry
+    try {
+      const prop = await getProperty(result.id);
+      if (prop.geometry) {
+        setSelectedGeometry({
+          type: 'Feature',
+          geometry: prop.geometry,
+          properties: {},
+        });
+      }
+    } catch {
+      // geometry fetch failed silently
+    }
+  }, []);
+
+  const handlePropertyClick = useCallback(async (props) => {
+    if (!props.id) return;
+    setSelectedPropertyId(props.id);
+    setConstraintMapData(null);
+    try {
+      const prop = await getProperty(props.id);
+      if (prop.geometry) {
+        setSelectedGeometry({
+          type: 'Feature',
+          geometry: prop.geometry,
+          properties: {},
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setSelectedPropertyId(null);
+    setSelectedGeometry(null);
+    setConstraintMapData(null);
+  }, []);
+
+  const toggleLayer = useCallback((key) => {
+    setLayers(prev => ({
+      ...prev,
+      [key]: { ...prev[key], active: !prev[key].active },
+    }));
+  }, []);
+
+  return (
+    <div className={`h-screen w-screen flex flex-col ${dark ? 'dark' : ''}`}>
+      {/* Top bar */}
+      <header className="h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800
+                         flex items-center px-4 gap-4 z-[1001] shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-ocean-500 to-protea-600 flex items-center justify-center">
+            <Leaf className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-sm font-bold text-gray-900 dark:text-white hidden sm:inline">
+            CapeEco
+          </span>
+        </div>
+
+        <AddressSearchBar onSelect={handleSearchSelect} />
+
+        <div className="ml-auto shrink-0">
+          <button
+            onClick={() => setDark(!dark)}
+            className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center
+                       hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          >
+            {dark ? <Sun className="w-4 h-4 text-fynbos-400" /> : <Moon className="w-4 h-4 text-gray-600" />}
+          </button>
+        </div>
+      </header>
+
+      {/* Main content: map + sidebar */}
+      <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 relative">
+          <InteractiveMap
+            dark={dark}
+            flyToCenter={flyTo?.center}
+            flyToZoom={flyTo?.zoom}
+            selectedPropertyGeometry={selectedGeometry}
+            onPropertyClick={handlePropertyClick}
+            showBioLayer={layers.biodiversity.active}
+            constraintMapData={constraintMapData}
+          />
+          <LayerControl layers={layers} onToggle={toggleLayer} />
+        </div>
+
+        {selectedPropertyId && (
+          <PropertySidebar
+            propertyId={selectedPropertyId}
+            onClose={handleClose}
+            onShowConstraintMap={setConstraintMapData}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default App;

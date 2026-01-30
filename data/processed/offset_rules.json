@@ -1,0 +1,429 @@
+{
+  "_metadata": {
+    "title": "Cape Town Biodiversity Offset Rules Configuration",
+    "version": "1.0.0",
+    "generated": "2026-01-30",
+    "sources": [
+      {
+        "name": "National Biodiversity Offset Guideline (2023)",
+        "reference": "Government Gazette 48841, Notice No. 3569, 23 June 2023",
+        "authority": "Department of Forestry, Fisheries and the Environment (DFFE)",
+        "url": "https://www.dffe.gov.za/sites/default/files/legislation/2023-09/nema_nationalbiodiversityoffsetguideline_g48841gon3569.pdf",
+        "note": "National guideline published under NEMA Section 24J. Not legally binding but guides EIA offset decisions."
+      },
+      {
+        "name": "Western Cape Provincial Guideline on Biodiversity Offsets (2007, revised 2011)",
+        "reference": "DEA&DP, Brownlie et al. 2007",
+        "authority": "Western Cape Department of Environmental Affairs and Development Planning",
+        "note": "First provincial offset guideline in South Africa. Establishes basic offset ratios by ecosystem threat status."
+      },
+      {
+        "name": "Cape Town BioNet 2024 (Terrestrial Biodiversity Network)",
+        "reference": "City of Cape Town Open Data Portal",
+        "authority": "City of Cape Town Biodiversity Management Branch",
+        "note": "CBA categories extracted from the live BioNet feature service."
+      },
+      {
+        "name": "National Biodiversity Assessment 2018 / SANBI Ecosystem Status 2011",
+        "reference": "South African National Biodiversity Institute",
+        "authority": "SANBI",
+        "note": "Ecosystem threat status classifications for Cape Town vegetation types."
+      }
+    ],
+    "disclaimer": "This configuration is derived from publicly available policy documents and open data. It is intended for indicative/screening purposes only and does NOT constitute legal or environmental consulting advice. Actual offset requirements are determined through the EIA process on a case-by-case basis by the competent authority."
+  },
+
+  "cba_categories": {
+    "PA": {
+      "code": "PA",
+      "name": "Protected Area",
+      "full_description": "Formally protected under the Protected Areas Act or reserved for Biodiversity Management Branch and in process for proclamation. Managed for biodiversity conservation.",
+      "development_allowed": false,
+      "offset_applicable": false,
+      "note": "No development permitted. Statutory conservation management required.",
+      "sdf_category": "Core 1: Protected and Conserved",
+      "bionet_significance": "International significance for biodiversity and landscape features."
+    },
+    "CA": {
+      "code": "CA",
+      "name": "Conservation Area",
+      "full_description": "Not formally protected under the Protected Areas Act. Includes areas managed for biodiversity conservation with short term stewardship agreements.",
+      "development_allowed": false,
+      "offset_applicable": false,
+      "note": "Managed for conservation. Should be upgraded to Protected Area where appropriate.",
+      "sdf_category": "Core 1: Protected and Conserved",
+      "bionet_significance": "International significance for biodiversity and landscape features."
+    },
+    "CBA_1a": {
+      "code": "CBA 1a",
+      "name": "Critical Biodiversity Area 1a (Irreplaceable - High/Medium Condition)",
+      "full_description": "Natural or near-natural ecological condition required to conserve a viable representative sample of this ecosystem type. Irreplaceable for meeting biodiversity targets. Includes Core Flora sites.",
+      "development_allowed": false,
+      "offset_applicable": false,
+      "base_ratio": null,
+      "note": "No-go area for development. Offsets not considered because residual impacts would be of exceptionally high significance. National guideline states offsets are not appropriate where impacts are on irreplaceable biodiversity.",
+      "sdf_category": "Core 1: CBA",
+      "bionet_significance": "International significance for biodiversity and landscape features. Loss will result in the inability to attain biodiversity targets and could lead to species extinction.",
+      "marxan_selection_frequency": "80-100%"
+    },
+    "CBA_1b": {
+      "code": "CBA 1b",
+      "name": "Critical Biodiversity Area 1b (Irreplaceable - Low Condition, High Selection)",
+      "full_description": "Low ecological condition required to conserve a viable representative sample of this ecosystem type. Irreplaceable for meeting biodiversity targets.",
+      "development_allowed": false,
+      "offset_applicable": "exceptional_circumstances_only",
+      "base_ratio": 30,
+      "ratio_description": "30 hectares of offset land required per 1 hectare of impact (30:1)",
+      "can_trade_down": false,
+      "note": "Only considered in exceptional circumstances where avoidance is demonstrably impossible. The 30:1 ratio derives from the Western Cape Provincial Guideline for Critically Endangered ecosystems. Rehabilitation may be required in addition to the offset.",
+      "sdf_category": "Core 1: CBA",
+      "marxan_selection_frequency": "80-100%"
+    },
+    "CBA_1c": {
+      "code": "CBA 1c",
+      "name": "Critical Biodiversity Area 1c (Irreplaceable - Low Condition, Connectivity)",
+      "full_description": "Irreplaceable low condition site selected for connectivity purposes.",
+      "development_allowed": false,
+      "offset_applicable": "exceptional_circumstances_only",
+      "base_ratio": 30,
+      "ratio_description": "30:1 ratio applies as for CBA 1b",
+      "can_trade_down": false,
+      "note": "Connectivity function means offset must be like-for-like in landscape position. Rehabilitation-focused offset may be appropriate.",
+      "sdf_category": "Core 1: CBA"
+    },
+    "CBA_2": {
+      "code": "CBA 2",
+      "name": "Critical Biodiversity Area 2 (Optimal Selection)",
+      "full_description": "Selected as the best option for meeting biodiversity targets based on complementarity, spatial efficiency, connectivity and/or avoidance of conflict with other uses.",
+      "development_allowed": "conditional",
+      "offset_applicable": true,
+      "base_ratio": 20,
+      "ratio_description": "20 hectares of offset land required per 1 hectare of impact (20:1) for Endangered ecosystems; ratio adjusted by ecosystem threat status",
+      "can_trade_down": true,
+      "trade_down_conditions": "Offset may be 'traded down' where the development site is within the Urban Development Edge and the offset secures higher-priority habitat (CBA 1 or PA-quality land).",
+      "note": "Offset ratio is based on Endangered ecosystem baseline. Actual ratio adjusted by ecosystem threat status multiplier. These are optimal (not irreplaceable) selections, so alternative spatial configurations may exist.",
+      "sdf_category": "Core 2: ESA"
+    },
+    "ESA_1": {
+      "code": "ESA 1",
+      "name": "Ecological Support Area 1 (Natural/Semi-natural)",
+      "full_description": "Natural/semi-natural ecological condition. Must be maintained in a semi-natural ecological condition. Further deterioration must be avoided, to support conservation of ecosystems and species and maintain ecologically functional landscapes.",
+      "development_allowed": "conditional",
+      "offset_applicable": true,
+      "base_ratio": 5,
+      "ratio_description": "5 hectares of offset per 1 hectare of impact (5:1) baseline for Vulnerable ecosystems",
+      "can_trade_down": true,
+      "note": "Offset required to maintain ecological processes (fire regime, animal movement, edge effects). Ratio adjusted by specific ecological function being impacted.",
+      "sdf_category": "Buffer 1",
+      "ecological_functions": ["Animal Movement", "Fire Regime", "Edge Reduction", "Combination"]
+    },
+    "ESA_2": {
+      "code": "ESA 2",
+      "name": "Ecological Support Area 2 (Intensively Modified)",
+      "full_description": "Intensively modified ecological condition. Must be maintained in semi-natural ecological condition. Further deterioration must be avoided, to support the conservation of ecosystems and species to maintain ecologically functional landscapes.",
+      "development_allowed": "conditional",
+      "offset_applicable": true,
+      "base_ratio": 3,
+      "ratio_description": "3:1 baseline ratio; rehabilitation-focused offset may substitute for land-based offset",
+      "can_trade_down": true,
+      "note": "Already degraded. Offset emphasis is on rehabilitation and restoration rather than land acquisition. Maintaining ecological function is the priority.",
+      "sdf_category": "Buffer 2"
+    },
+    "ONA": {
+      "code": "ONA",
+      "name": "Other Natural Area",
+      "full_description": "Natural area that has not been selected to meet biodiversity targets for ecosystem types, species or ecological processes.",
+      "development_allowed": true,
+      "offset_applicable": false,
+      "base_ratio": 0,
+      "note": "No biodiversity offset required. Standard EIA conditions apply. Alien invasive control and ecologically sound fire management still recommended.",
+      "sdf_category": null
+    }
+  },
+
+  "ecosystem_threat_status_ratios": {
+    "_description": "Basic offset ratios from the Western Cape Provincial Guideline on Biodiversity Offsets (DEA&DP 2007, Brownlie et al.). The ratio represents hectares of offset land required per hectare of development impact. These are applied as multipliers to the CBA base ratio.",
+    "_formula": "Offset Area = Impact Area × base_ratio × ecosystem_threat_multiplier × condition_multiplier",
+    "CR": {
+      "status": "Critically Endangered",
+      "basic_ratio": 30,
+      "offset_consideration": "Exceptional circumstances only. National guideline states offsets not appropriate for irreplaceable biodiversity. Western Cape guideline applies 30:1 only where avoidance has been demonstrably exhausted.",
+      "note": "Ecosystems with <50% remaining should generally be considered unsuitable for offsetting (no-go). Most CR ecosystems in Cape Town have <20% remaining."
+    },
+    "EN": {
+      "status": "Endangered",
+      "basic_ratio": 20,
+      "offset_consideration": "Offsets applicable with stringent conditions. Like-for-like ecosystem type offset required.",
+      "note": "Offset must secure the same ecosystem type or a higher-priority (more threatened) type."
+    },
+    "VU": {
+      "status": "Vulnerable",
+      "basic_ratio": 5,
+      "offset_consideration": "Offsets applicable. Trading down to secure more threatened ecosystem types may be acceptable.",
+      "note": "Lower ratio reflects greater remaining extent and lower extinction risk."
+    },
+    "LT": {
+      "status": "Least Threatened",
+      "basic_ratio": 1,
+      "offset_consideration": "Offset rarely required unless specific species or processes are impacted.",
+      "note": "Ecosystems with adequate remaining extent. Standard mitigation hierarchy applies."
+    }
+  },
+
+  "cape_town_ecosystem_types": {
+    "_description": "Vegetation types occurring within the City of Cape Town municipal area, with their SANBI ecosystem threat status (NBA 2018 / SANBI Ecosystem Status 2011). Extracted from CCT Open Data Portal SANBI Vegetation Ecosystem Status 2011 layer.",
+    "critically_endangered": [
+      {
+        "name": "Atlantis Sand Fynbos",
+        "threat_status": "CR",
+        "area_remaining_ha": 14684.7,
+        "basic_ratio": 30,
+        "offset_notes": "Large remnant but heavily fragmented. Key conservation land bank area (Atlantis)."
+      },
+      {
+        "name": "Cape Flats Sand Fynbos",
+        "threat_status": "CR",
+        "area_remaining_ha": 5781.8,
+        "basic_ratio": 30,
+        "offset_notes": "Less than 1% conserved. Endemic to Cape Town. 15% of original extent remaining. Extremely high offset cost.",
+        "percent_remaining_of_original": 15,
+        "percent_conserved": 1
+      },
+      {
+        "name": "Swartland Shale Renosterveld",
+        "threat_status": "CR",
+        "area_remaining_ha": 3414.8,
+        "basic_ratio": 30,
+        "offset_notes": "Highly fragmented on agricultural land. Very limited offset opportunities."
+      },
+      {
+        "name": "Peninsula Granite Fynbos - South",
+        "threat_status": "CR",
+        "area_remaining_ha": 2473.6,
+        "basic_ratio": 30,
+        "offset_notes": "Concentrated in high-value residential areas (Constantia, Hout Bay)."
+      },
+      {
+        "name": "Swartland Granite Renosterveld",
+        "threat_status": "CR",
+        "area_remaining_ha": 1784.0,
+        "basic_ratio": 30,
+        "offset_notes": "Very limited remaining extent."
+      },
+      {
+        "name": "Peninsula Granite Fynbos - North",
+        "threat_status": "CR",
+        "area_remaining_ha": 1478.8,
+        "basic_ratio": 30
+      },
+      {
+        "name": "Kogelberg Sandstone Fynbos",
+        "threat_status": "CR",
+        "area_remaining_ha": 9162.7,
+        "basic_ratio": 30
+      },
+      {
+        "name": "Peninsula Shale Renosterveld",
+        "threat_status": "CR",
+        "area_remaining_ha": 273.8,
+        "basic_ratio": 30,
+        "offset_notes": "Very small remnant. Near-total loss."
+      },
+      {
+        "name": "Swartland Alluvium Fynbos",
+        "threat_status": "CR",
+        "area_remaining_ha": 272.9,
+        "basic_ratio": 30
+      },
+      {
+        "name": "Lourensford Alluvium Fynbos",
+        "threat_status": "CR",
+        "area_remaining_ha": 228.9,
+        "basic_ratio": 30
+      },
+      {
+        "name": "Swartland Silcrete Renosterveld",
+        "threat_status": "CR",
+        "area_remaining_ha": 148.9,
+        "basic_ratio": 30
+      },
+      {
+        "name": "Elgin Shale Fynbos",
+        "threat_status": "CR",
+        "area_remaining_ha": 331.6,
+        "basic_ratio": 30
+      }
+    ],
+    "endangered": [
+      {
+        "name": "Peninsula Sandstone Fynbos",
+        "threat_status": "EN",
+        "area_remaining_ha": 21006.0,
+        "basic_ratio": 20,
+        "offset_notes": "Largest remaining vegetation type in CT. Concentrated in Table Mountain National Park."
+      },
+      {
+        "name": "Cape Flats Dune Strandveld - West Coast",
+        "threat_status": "EN",
+        "area_remaining_ha": 10244.9,
+        "basic_ratio": 20,
+        "offset_notes": "48% remaining (combined). Urban sprawl main threat."
+      },
+      {
+        "name": "Cape Flats Dune Strandveld - False Bay",
+        "threat_status": "EN",
+        "area_remaining_ha": 7539.9,
+        "basic_ratio": 20,
+        "offset_notes": "False Bay form approaching Critically Endangered. Only 30% remaining with 19% in good condition."
+      },
+      {
+        "name": "Hangklip Sand Fynbos",
+        "threat_status": "EN",
+        "area_remaining_ha": 1822.4,
+        "basic_ratio": 20
+      }
+    ],
+    "vulnerable": [
+      {
+        "name": "Boland Granite Fynbos",
+        "threat_status": "VU",
+        "area_remaining_ha": 5689.5,
+        "basic_ratio": 5
+      },
+      {
+        "name": "Cape Winelands Shale Fynbos",
+        "threat_status": "VU",
+        "area_remaining_ha": 2268.1,
+        "basic_ratio": 5
+      },
+      {
+        "name": "Cape Lowland Freshwater Wetlands",
+        "threat_status": "VU",
+        "area_remaining_ha": 1170.4,
+        "basic_ratio": 5,
+        "offset_notes": "SANBI 2011 classifies as VU; more recent assessments (Wikipedia/SANBI) suggest CR. Freshwater wetland offsets are particularly complex due to hydrological connectivity requirements."
+      },
+      {
+        "name": "Peninsula Shale Fynbos",
+        "threat_status": "VU",
+        "area_remaining_ha": 659.6,
+        "basic_ratio": 5
+      },
+      {
+        "name": "Freshwater Lake",
+        "threat_status": "VU",
+        "area_remaining_ha": 79.7,
+        "basic_ratio": 5
+      }
+    ],
+    "least_threatened": [
+      {
+        "name": "Southern Afrotemperate Forest",
+        "threat_status": "LT",
+        "area_remaining_ha": 345.3,
+        "basic_ratio": 1
+      },
+      {
+        "name": "Western Coastal Shale Band Vegetation",
+        "threat_status": "LT",
+        "area_remaining_ha": 316.4,
+        "basic_ratio": 1
+      },
+      {
+        "name": "Cape Seashore Vegetation",
+        "threat_status": "LT",
+        "area_remaining_ha": 333.1,
+        "basic_ratio": 1
+      },
+      {
+        "name": "Cape Estuarine Salt Marshes",
+        "threat_status": "LT",
+        "area_remaining_ha": 205.7,
+        "basic_ratio": 1
+      }
+    ]
+  },
+
+  "condition_multipliers": {
+    "_description": "Multipliers applied based on the ecological condition of the habitat being impacted. Applied on top of the ecosystem threat status ratio. From the BioNet habitat condition field (HBT_CNDT).",
+    "Natural": {
+      "multiplier": 1.0,
+      "description": "Pristine or near-pristine condition. Full offset ratio applies."
+    },
+    "Good": {
+      "multiplier": 1.0,
+      "description": "Good ecological condition with minor disturbance. Full ratio applies."
+    },
+    "Fair": {
+      "multiplier": 0.75,
+      "description": "Moderately degraded but restorable. Reduced ratio reflects lower current biodiversity value."
+    },
+    "Poor": {
+      "multiplier": 0.5,
+      "description": "Significantly degraded. Rehabilitation may be more appropriate than land-based offset."
+    },
+    "Irreversibly modified": {
+      "multiplier": 0.0,
+      "description": "No natural habitat remaining. No biodiversity offset required."
+    }
+  },
+
+  "urban_edge_rules": {
+    "_description": "The Urban Development Edge affects offset calculations. Developments inside the edge may receive reduced offset requirements or be allowed to 'trade down' to offset in higher-priority areas.",
+    "inside_urban_edge": {
+      "trade_down_allowed": true,
+      "ratio_adjustment": 0.8,
+      "note": "20% reduction in offset ratio may be applied for developments within the Urban Development Edge, provided the offset secures higher-priority habitat outside the edge."
+    },
+    "outside_urban_edge": {
+      "trade_down_allowed": false,
+      "ratio_adjustment": 1.2,
+      "note": "20% increase in offset ratio for developments outside the Urban Development Edge, reflecting higher ecological sensitivity and cumulative impact risk."
+    }
+  },
+
+  "offset_cost_estimation": {
+    "_description": "Indicative cost parameters for offset calculations. Actual costs vary significantly based on land values, management requirements, and endowment funding.",
+    "land_acquisition_cost_per_ha": {
+      "conservation_land_bank": {
+        "description": "City of Cape Town Conservation Land Bank (Atlantis, Macassar East)",
+        "estimated_range_zar": [50000, 150000],
+        "note": "Pre-secured offset land held by the City. Costs based on municipal valuation + management endowment."
+      },
+      "private_land_cba1": {
+        "description": "Private land in CBA 1 areas",
+        "estimated_range_zar": [200000, 2000000],
+        "note": "Highly variable. Atlantic Seaboard and Southern Suburbs significantly more expensive."
+      }
+    },
+    "management_endowment_per_ha": {
+      "description": "Capital sum required to fund in-perpetuity management of offset site",
+      "estimated_zar": 75000,
+      "note": "Based on CapeNature and SANParks management cost benchmarks. Covers alien clearing, fire management, monitoring."
+    },
+    "stewardship_agreement_duration_years": 99,
+    "note": "National guideline requires offset land to be secured for at least 99 years through a biodiversity stewardship agreement or formal protected area declaration."
+  },
+
+  "calculation_engine": {
+    "_description": "Formula and parameters for the calculation engine to compute offset requirements.",
+    "formula": "offset_hectares = impact_area_ha × base_ratio × condition_multiplier × urban_edge_adjustment",
+    "steps": [
+      "1. Determine CBA category of the impact site from BioNet layer",
+      "2. Look up ecosystem threat status from SANBI vegetation type",
+      "3. Get base_ratio from ecosystem_threat_status_ratios[threat_status].basic_ratio",
+      "4. Apply condition_multiplier based on BioNet HBT_CNDT field",
+      "5. Apply urban_edge_adjustment based on whether site is inside/outside Urban Development Edge",
+      "6. Calculate: offset_hectares = impact_area × base_ratio × condition_multiplier × urban_edge_adjustment",
+      "7. Estimate cost: offset_cost = offset_hectares × (land_cost + management_endowment)",
+      "8. Identify matching offset sites from Conservation Land Bank or CBA areas of same ecosystem type"
+    ],
+    "special_rules": {
+      "no_go_categories": ["PA", "CA", "CBA_1a"],
+      "exceptional_only_categories": ["CBA_1b", "CBA_1c"],
+      "offset_required_categories": ["CBA_2", "ESA_1", "ESA_2"],
+      "no_offset_categories": ["ONA"],
+      "cr_ecosystem_warning": "Ecosystems classified as Critically Endangered with <20% remaining extent should be flagged as potential no-go areas regardless of CBA category. The national guideline states offsets are not appropriate for irreplaceable biodiversity."
+    }
+  }
+}

@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-capeeco_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-capeeco_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-capeeco}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-capeeco_user}"]
+      interval: 5s
+      retries: 5
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://capeeco_user:capeeco_pass@db:5432/capeeco}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      CAPEECO_API_KEYS: ${CAPEECO_API_KEYS:-demo-key-capeeco-2026:free}
+    ports:
+      - "8000:8000"
+
+  web:
+    build: ./frontend
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+
+volumes:
+  pgdata:

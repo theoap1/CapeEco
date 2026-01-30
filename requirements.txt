@@ -1,0 +1,12 @@
+# CapeEco API dependencies
+fastapi==0.115.*
+uvicorn[standard]==0.34.*
+sqlalchemy==2.0.*
+geoalchemy2==0.17.*
+psycopg2-binary==2.9.*
+geopandas==1.0.*
+shapely==2.1.*
+httpx==0.28.*
+pydantic==2.11.*
+ijson==3.3.*
+alembic==1.18.*
