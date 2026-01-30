@@ -62,14 +62,21 @@ SCHEMA = "capeeco"
 
 
 def _conn_string():
-    if DATABASE_URL:
+    db_url = os.environ.get("DATABASE_URL", "")
+    if db_url:
         # Railway uses postgres:// but SQLAlchemy requires postgresql://
-        if DATABASE_URL.startswith("postgres://"):
-            return DATABASE_URL.replace("postgres://", "postgresql://", 1)
-        return DATABASE_URL
-    if DB_PASSWORD:
-        return f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    return f"postgresql://{DB_USER}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+        logger.info("Using DATABASE_URL: %s...%s", db_url[:25], db_url[-15:])
+        return db_url
+    pw = os.environ.get("PGPASSWORD", "")
+    host = os.environ.get("PGHOST", "localhost")
+    port = os.environ.get("PGPORT", "5432")
+    user = os.environ.get("PGUSER", os.environ.get("USER", "postgres"))
+    name = os.environ.get("PGDATABASE", "capeeco")
+    if pw:
+        return f"postgresql://{user}:{pw}@{host}:{port}/{name}"
+    return f"postgresql://{user}@{host}:{port}/{name}"
 
 
 engine = None
