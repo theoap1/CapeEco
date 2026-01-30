@@ -63,6 +63,9 @@ SCHEMA = "capeeco"
 
 def _conn_string():
     if DATABASE_URL:
+        # Railway uses postgres:// but SQLAlchemy requires postgresql://
+        if DATABASE_URL.startswith("postgres://"):
+            return DATABASE_URL.replace("postgres://", "postgresql://", 1)
         return DATABASE_URL
     if DB_PASSWORD:
         return f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
