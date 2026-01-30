@@ -328,7 +328,7 @@ async function exportToPDF(contentRef, reportData) {
 
   // Temporarily expand the scroll container so html2canvas captures all content
   const scrollParent = el.closest('.report-content-wrapper');
-  const modalBox = el.closest('.max-h-\\[95vh\\]');
+  const modalBox = scrollParent?.parentElement;
   const savedStyles = [];
   for (const node of [scrollParent, modalBox]) {
     if (node) {
@@ -427,6 +427,7 @@ export default function ReportView({ propertyId, onClose }) {
       await exportToPDF(contentRef, data);
     } catch (e) {
       console.error('PDF export failed:', e);
+      alert(`PDF export failed: ${e.message || e}. Use the Print button instead.`);
     } finally {
       setExporting(false);
     }
