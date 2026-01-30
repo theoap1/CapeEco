@@ -8,6 +8,7 @@ RUN npm run build
 
 # Stage 2: Python backend + built frontend
 FROM python:3.11-slim
+ARG CACHEBUST=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gdal-bin libgdal-dev libgeos-dev libproj-dev \
