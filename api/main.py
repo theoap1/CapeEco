@@ -1149,15 +1149,19 @@ def v1_health():
                 checks["database"] = "connected"
                 row = conn.execute(text("SELECT PostGIS_Version()")).scalar()
                 checks["postgis"] = bool(row)
-                count = conn.execute(text(f"SELECT COUNT(*) FROM {SCHEMA}.properties")).scalar()
-                checks["data_loaded"] = count > 0
-                checks["property_count"] = count
+                try:
+                    count = conn.execute(text(f"SELECT COUNT(*) FROM {SCHEMA}.properties")).scalar()
+                    checks["data_loaded"] = count > 0
+                    checks["property_count"] = count
+                except Exception:
+                    checks["data_loaded"] = False
+                    checks["property_count"] = 0
     except Exception as e:
         checks["error"] = str(e)
     checks["status"] = "ok" if all([
         checks["database"] == "connected", checks["postgis"], checks["data_loaded"]
     ]) else "degraded"
-    return checks
+    return checks  # Always HTTP 200 — Railway needs this for healthcheck
 
 
 # Mount v1 router
