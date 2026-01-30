@@ -387,3 +387,18 @@ COMMENT ON TABLE capeeco.property_urban_edge IS 'Is property inside/outside urba
 COMMENT ON COLUMN capeeco.properties.erf_number IS 'Property number. TEXT because formats include "10-RE", "102-0-1", "10202-0-2" for remainders and subdivisions.';
 COMMENT ON COLUMN capeeco.properties.sg26_code IS 'Surveyor General 26-digit code. The true unique identifier for SA land parcels.';
 COMMENT ON COLUMN capeeco.properties.zoning_raw IS 'Raw zoning. Split-zoned parcels have comma-separated multi-values that can be hundreds of chars.';
+
+-- =============================================================================
+-- USERS (authentication)
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS capeeco.users (
+    id          BIGSERIAL PRIMARY KEY,
+    email       VARCHAR(255) UNIQUE NOT NULL,
+    hashed_password VARCHAR(255) NOT NULL,
+    full_name   VARCHAR(255),
+    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON capeeco.users(email);

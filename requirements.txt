@@ -10,3 +10,6 @@ httpx==0.28.*
 pydantic==2.11.*
 ijson==3.3.*
 alembic==1.18.*
+python-jose[cryptography]==3.3.*
+passlib[bcrypt]==1.7.*
+python-multipart==0.0.*

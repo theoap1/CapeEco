@@ -2,6 +2,27 @@ import axios from 'axios';
 
 const api = axios.create({ baseURL: '/api' });
 
+// Attach JWT token to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('capeeco_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// On 401, clear token and redirect to login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && !error.config?.url?.includes('/auth/')) {
+      localStorage.removeItem('capeeco_token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const searchProperties = (q) =>
   api.get('/search', { params: { q, limit: 10 } }).then(r => r.data);
 

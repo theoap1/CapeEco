@@ -112,6 +112,25 @@ async def lifespan(app: FastAPI):
         pool_pre_ping=True,
         pool_recycle=3600,
     )
+    # Ensure users table exists
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS capeeco.users (
+                    id          BIGSERIAL PRIMARY KEY,
+                    email       VARCHAR(255) UNIQUE NOT NULL,
+                    hashed_password VARCHAR(255) NOT NULL,
+                    full_name   VARCHAR(255),
+                    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+                    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+            """))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_email ON capeeco.users(email)"))
+            conn.commit()
+            print("STARTUP: users table ready", flush=True)
+    except Exception as e:
+        print(f"STARTUP: users table check failed: {e}", flush=True)
     yield
     engine.dispose()
 
@@ -143,11 +162,84 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 
 # ---------------------------------------------------------------------------
+# Authentication endpoints
+# ---------------------------------------------------------------------------
+from api.auth import (
+    UserCreate, UserLogin, UserResponse, Token,
+    hash_password, verify_password, create_access_token, get_current_user,
+)
+
+
+@app.post("/api/auth/register", response_model=Token)
+def auth_register(body: UserCreate):
+    """Create a new user account."""
+    email = body.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(400, "Invalid email address")
+    if len(body.password) < 6:
+        raise HTTPException(400, "Password must be at least 6 characters")
+
+    hashed = hash_password(body.password)
+    with engine.connect() as conn:
+        # Check if email already exists
+        exists = conn.execute(
+            text(f"SELECT id FROM {SCHEMA}.users WHERE email = :email"),
+            {"email": email},
+        ).fetchone()
+        if exists:
+            raise HTTPException(409, "Email already registered")
+
+        row = conn.execute(
+            text(f"""
+                INSERT INTO {SCHEMA}.users (email, hashed_password, full_name)
+                VALUES (:email, :hashed, :name)
+                RETURNING id, email, full_name, is_active, created_at
+            """),
+            {"email": email, "hashed": hashed, "name": body.full_name},
+        ).fetchone()
+        conn.commit()
+
+    user = dict(row._mapping)
+    token = create_access_token({"sub": user["id"]})
+    return {"access_token": token, "token_type": "bearer", "user": user}
+
+
+@app.post("/api/auth/login", response_model=Token)
+def auth_login(body: UserLogin):
+    """Authenticate and return a JWT token."""
+    email = body.email.strip().lower()
+    with engine.connect() as conn:
+        row = conn.execute(
+            text(f"SELECT id, email, full_name, is_active, created_at, hashed_password FROM {SCHEMA}.users WHERE email = :email"),
+            {"email": email},
+        ).fetchone()
+
+    if not row:
+        raise HTTPException(401, "Invalid email or password")
+
+    user = dict(row._mapping)
+    if not verify_password(body.password, user.pop("hashed_password")):
+        raise HTTPException(401, "Invalid email or password")
+
+    if not user["is_active"]:
+        raise HTTPException(403, "Account disabled")
+
+    token = create_access_token({"sub": user["id"]})
+    return {"access_token": token, "token_type": "bearer", "user": user}
+
+
+@app.get("/api/auth/me", response_model=UserResponse)
+def auth_me(current_user: dict = Depends(get_current_user)):
+    """Return the current authenticated user."""
+    return current_user
+
+
+# ---------------------------------------------------------------------------
 # Search / Autocomplete
 # ---------------------------------------------------------------------------
 
 @app.get("/api/search")
-def search_properties(q: str = Query(..., min_length=2, max_length=200), limit: int = Query(10, le=50)):
+def search_properties(q: str = Query(..., min_length=2, max_length=200), limit: int = Query(10, le=50), _user: dict = Depends(get_current_user)):
     """Search properties by address or ERF number. Returns top matches."""
     with engine.connect() as conn:
         # Try ERF number match first (exact or prefix)
@@ -200,7 +292,7 @@ def search_properties(q: str = Query(..., min_length=2, max_length=200), limit: 
 # ---------------------------------------------------------------------------
 
 @app.get("/api/property/{property_id}")
-def get_property(property_id: int):
+def get_property(property_id: int, _user: dict = Depends(get_current_user)):
     """Get full property details + GeoJSON geometry."""
     with engine.connect() as conn:
         row = conn.execute(text(f"""
@@ -258,7 +350,7 @@ def get_property(property_id: int):
 # ---------------------------------------------------------------------------
 
 @app.get("/api/property/{property_id}/biodiversity")
-def get_biodiversity_analysis(property_id: int, footprint_sqm: float = Query(None)):
+def get_biodiversity_analysis(property_id: int, footprint_sqm: float = Query(None), _user: dict = Depends(get_current_user)):
     """Run biodiversity offset calculation."""
     with engine.connect() as conn:
         row = conn.execute(text(f"""
@@ -274,7 +366,7 @@ def get_biodiversity_analysis(property_id: int, footprint_sqm: float = Query(Non
 
 
 @app.get("/api/property/{property_id}/netzero")
-def get_netzero_analysis(property_id: int):
+def get_netzero_analysis(property_id: int, _user: dict = Depends(get_current_user)):
     """Run net zero scorecard."""
     with engine.connect() as conn:
         row = conn.execute(text(f"""
@@ -289,7 +381,7 @@ def get_netzero_analysis(property_id: int):
 
 
 @app.get("/api/property/{property_id}/solar")
-def get_solar_analysis(property_id: int):
+def get_solar_analysis(property_id: int, _user: dict = Depends(get_current_user)):
     """Run solar potential calculation."""
     with engine.connect() as conn:
         row = conn.execute(text(f"""
@@ -303,7 +395,7 @@ def get_solar_analysis(property_id: int):
 
 
 @app.get("/api/property/{property_id}/water")
-def get_water_analysis(property_id: int):
+def get_water_analysis(property_id: int, _user: dict = Depends(get_current_user)):
     """Run water harvesting calculation."""
     with engine.connect() as conn:
         row = conn.execute(text(f"""
@@ -317,7 +409,7 @@ def get_water_analysis(property_id: int):
 
 
 @app.get("/api/property/{property_id}/constraint-map")
-def get_constraint_map(property_id: int):
+def get_constraint_map(property_id: int, _user: dict = Depends(get_current_user)):
     """Generate GeoJSON constraint map for a property."""
     with engine.connect() as conn:
         row = conn.execute(text(f"""
@@ -338,6 +430,7 @@ def get_constraint_map(property_id: int):
 def get_biodiversity_layer(
     west: float = Query(...), south: float = Query(...),
     east: float = Query(...), north: float = Query(...),
+    _user: dict = Depends(get_current_user),
 ):
     """Return CBA overlay polygons within the viewport as GeoJSON."""
     with engine.connect() as conn:
@@ -374,6 +467,7 @@ def get_biodiversity_layer(
 def get_properties_layer(
     west: float = Query(...), south: float = Query(...),
     east: float = Query(...), north: float = Query(...),
+    _user: dict = Depends(get_current_user),
 ):
     """Return property boundaries within viewport. Only at high zoom levels."""
     # Calculate viewport area to prevent returning too many properties
@@ -411,6 +505,7 @@ def get_properties_layer(
 def get_ecosystem_layer(
     west: float = Query(...), south: float = Query(...),
     east: float = Query(...), north: float = Query(...),
+    _user: dict = Depends(get_current_user),
 ):
     """Return ecosystem type polygons within viewport."""
     with engine.connect() as conn:
@@ -447,6 +542,7 @@ def get_ecosystem_layer(
 def get_heritage_layer(
     west: float = Query(...), south: float = Query(...),
     east: float = Query(...), north: float = Query(...),
+    _user: dict = Depends(get_current_user),
 ):
     """Return heritage sites within viewport."""
     area_deg = (east - west) * (north - south)
@@ -503,7 +599,7 @@ def _safe_float(v, default=None):
 
 
 @app.get("/api/property/{property_id}/report")
-def get_property_report(property_id: int):
+def get_property_report(property_id: int, _user: dict = Depends(get_current_user)):
     """Generate comprehensive Development Potential Report data."""
     rules = _load_rules()
     report_date = date.today()
@@ -860,7 +956,7 @@ class AiAnalyzeRequest(BaseModel):
 
 
 @app.post("/api/ai/analyze")
-async def ai_analyze(req: AiAnalyzeRequest):
+async def ai_analyze(req: AiAnalyzeRequest, _user: dict = Depends(get_current_user)):
     """Get AI-powered analysis for a report section."""
     system_prompt = AI_SYSTEM_PROMPTS.get(req.section)
     if not system_prompt:
