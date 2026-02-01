@@ -34,6 +34,7 @@ function MainApp() {
   const [flyTo, setFlyTo] = useState(null);
   const [selectedGeometry, setSelectedGeometry] = useState(null);
   const [constraintMapData, setConstraintMapData] = useState(null);
+  const [comparisonData, setComparisonData] = useState(null);
   const [layers, setLayers] = useState({
     biodiversity: { active: true, label: 'Biodiversity (CBA/ESA)' },
   });
@@ -41,6 +42,7 @@ function MainApp() {
   const handleSearchSelect = useCallback(async (result) => {
     setSelectedPropertyId(result.id);
     setConstraintMapData(null);
+    setComparisonData(null);
     if (result.centroid_lat && result.centroid_lon) {
       setFlyTo({ center: [result.centroid_lat, result.centroid_lon], zoom: 17 });
     }
@@ -62,6 +64,7 @@ function MainApp() {
     if (!props.id) return;
     setSelectedPropertyId(props.id);
     setConstraintMapData(null);
+    setComparisonData(null);
     try {
       const prop = await getProperty(props.id);
       if (prop.geometry) {
@@ -80,6 +83,7 @@ function MainApp() {
     setSelectedPropertyId(null);
     setSelectedGeometry(null);
     setConstraintMapData(null);
+    setComparisonData(null);
   }, []);
 
   const toggleLayer = useCallback((key) => {
@@ -140,6 +144,7 @@ function MainApp() {
             onPropertyClick={handlePropertyClick}
             showBioLayer={layers.biodiversity.active}
             constraintMapData={constraintMapData}
+            comparisonData={comparisonData}
           />
           <LayerControl layers={layers} onToggle={toggleLayer} />
         </div>
@@ -149,6 +154,7 @@ function MainApp() {
             propertyId={selectedPropertyId}
             onClose={handleClose}
             onShowConstraintMap={setConstraintMapData}
+            onShowComparison={setComparisonData}
           />
         )}
       </div>

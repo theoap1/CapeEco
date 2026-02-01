@@ -296,6 +296,19 @@ CREATE TABLE capeeco.property_urban_edge (
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Property valuations (cached from GV2022 scraper)
+CREATE TABLE capeeco.property_valuations (
+    id                  BIGSERIAL PRIMARY KEY,
+    property_id         BIGINT NOT NULL REFERENCES capeeco.properties(id) UNIQUE,
+    property_reference  VARCHAR(50),
+    market_value_zar    NUMERIC(15,2),
+    valuation_date      DATE DEFAULT '2022-07-01',
+    rating_category     VARCHAR(100),
+    fetched_at          TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_pv_property ON capeeco.property_valuations(property_id);
+CREATE INDEX idx_pv_market_value ON capeeco.property_valuations(market_value_zar);
+
 -- Offset calculation results (per development proposal)
 CREATE TABLE capeeco.offset_calculations (
     id                          BIGSERIAL PRIMARY KEY,

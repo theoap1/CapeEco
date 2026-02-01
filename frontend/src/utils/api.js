@@ -69,3 +69,12 @@ export const getPropertyReport = (id) =>
 
 export const getAiAnalysis = (section, context) =>
   api.post('/ai/analyze', { section, context }).then(r => r.data);
+
+export const getRadiusComparison = (id, radiusKm = 1.0) =>
+  api.get(`/property/${id}/compare/radius`, { params: { radius_km: radiusKm } }).then(r => r.data);
+
+export const getSuburbComparison = (id) =>
+  api.get(`/property/${id}/compare/suburb`).then(r => r.data);
+
+export const getConstructionCost = (id) =>
+  api.get(`/property/${id}/construction-cost`).then(r => r.data);

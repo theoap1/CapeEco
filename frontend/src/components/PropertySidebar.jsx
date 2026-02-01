@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import {
   X, ChevronRight, Sun, Droplets, Leaf, MapPin, Building, Ruler,
   Zap, Star, AlertTriangle, Shield, TrendingUp, Info, FileText,
+  Search, DollarSign, Hammer,
 } from 'lucide-react';
-import { getProperty, getNetZeroAnalysis, getBiodiversityAnalysis, getConstraintMap, getPropertyReport } from '../utils/api';
+import { getProperty, getNetZeroAnalysis, getBiodiversityAnalysis, getConstraintMap, getPropertyReport, getRadiusComparison, getSuburbComparison, getConstructionCost } from '../utils/api';
 import ReportView from './ReportView';
 import { CBA_COLORS, BIO_STATUS, GREENSTAR_COLORS } from '../utils/constants';
 
@@ -133,7 +134,32 @@ function HeritageCard({ h }) {
   );
 }
 
-export default function PropertySidebar({ propertyId, onClose, onShowConstraintMap }) {
+function fmtZar(val) {
+  if (val == null) return '\u2014';
+  return `R ${Math.round(val).toLocaleString()}`;
+}
+
+function ComparisonCard({ label, data, color }) {
+  if (!data) return null;
+  return (
+    <div className={`bg-gray-50 dark:bg-gray-800 rounded-lg p-2.5 border-l-3 ${color}`}>
+      <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">{label}</div>
+      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{fmtZar(data.market_value_zar)}</div>
+      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+        {data.value_per_sqm ? `R ${data.value_per_sqm.toLocaleString()}/m²` : ''}
+        {data.area_sqm ? ` \u00b7 ${Math.round(data.area_sqm).toLocaleString()} m²` : ''}
+      </div>
+      {data.full_address && (
+        <div className="text-[10px] text-gray-400 mt-0.5 truncate">{data.full_address}</div>
+      )}
+      {data.distance_m != null && (
+        <div className="text-[10px] text-gray-400">{data.distance_m < 1000 ? `${data.distance_m} m away` : `${(data.distance_m / 1000).toFixed(1)} km away`}</div>
+      )}
+    </div>
+  );
+}
+
+export default function PropertySidebar({ propertyId, onClose, onShowConstraintMap, onShowComparison }) {
   const [property, setProperty] = useState(null);
   const [netzero, setNetzero] = useState(null);
   const [biodiversity, setBiodiversity] = useState(null);
@@ -141,6 +167,12 @@ export default function PropertySidebar({ propertyId, onClose, onShowConstraintM
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisRun, setAnalysisRun] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [radiusData, setRadiusData] = useState(null);
+  const [suburbData, setSuburbData] = useState(null);
+  const [constructionCost, setConstructionCost] = useState(null);
+  const [radiusKm, setRadiusKm] = useState(1.0);
+  const [comparisonRun, setComparisonRun] = useState(false);
 
   useEffect(() => {
     if (!propertyId) return;
@@ -148,6 +180,10 @@ export default function PropertySidebar({ propertyId, onClose, onShowConstraintM
     setAnalysisRun(false);
     setNetzero(null);
     setBiodiversity(null);
+    setComparisonRun(false);
+    setRadiusData(null);
+    setSuburbData(null);
+    setConstructionCost(null);
 
     getProperty(propertyId)
       .then(setProperty)
@@ -178,6 +214,34 @@ export default function PropertySidebar({ propertyId, onClose, onShowConstraintM
       onShowConstraintMap?.(data);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const runComparison = async () => {
+    setComparisonLoading(true);
+    try {
+      const [radius, suburb, cost] = await Promise.all([
+        getRadiusComparison(propertyId, radiusKm),
+        getSuburbComparison(propertyId),
+        getConstructionCost(propertyId),
+      ]);
+      setRadiusData(radius);
+      setSuburbData(suburb);
+      setConstructionCost(cost);
+      setComparisonRun(true);
+      // Send comparison data to map for visualization
+      onShowComparison?.({
+        radiusKm,
+        center: radius?.selected_property
+          ? [radius.selected_property.centroid_lat, radius.selected_property.centroid_lon]
+          : null,
+        cheapest: radius?.cheapest,
+        mostExpensive: radius?.most_expensive,
+      });
+    } catch (err) {
+      console.error('Comparison error:', err);
+    } finally {
+      setComparisonLoading(false);
     }
   };
 
@@ -345,6 +409,136 @@ export default function PropertySidebar({ propertyId, onClose, onShowConstraintM
               </button>
             </div>
           )}
+
+          {/* Property Comparison */}
+          <Section title="Property Comparison" icon={DollarSign}>
+            <div className="space-y-3">
+              {/* Radius slider */}
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400 flex justify-between">
+                  <span>Search Radius</span>
+                  <span className="font-medium text-gray-900 dark:text-gray-100">{radiusKm} km</span>
+                </label>
+                <input
+                  type="range" min="0.5" max="5" step="0.5" value={radiusKm}
+                  onChange={(e) => setRadiusKm(parseFloat(e.target.value))}
+                  className="w-full h-1.5 mt-1 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer accent-ocean-600"
+                />
+                <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
+                  <span>0.5 km</span><span>5 km</span>
+                </div>
+              </div>
+
+              <button
+                onClick={runComparison}
+                disabled={comparisonLoading}
+                className="w-full py-2 px-4 rounded-xl bg-gradient-to-r from-fynbos-600 to-ocean-600
+                           text-white font-medium text-sm hover:from-fynbos-700 hover:to-ocean-700
+                           disabled:opacity-50 disabled:cursor-not-allowed transition-all
+                           flex items-center justify-center gap-2 shadow-sm"
+              >
+                {comparisonLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Fetching valuations...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4" />
+                    Compare Properties
+                  </>
+                )}
+              </button>
+
+              {comparisonRun && radiusData && (
+                <>
+                  {/* Selected property value */}
+                  {radiusData.selected_property?.market_value_zar && (
+                    <div className="bg-ocean-50 dark:bg-ocean-900/20 rounded-lg p-2.5 border-l-3 border-ocean-500">
+                      <div className="text-[10px] text-ocean-600 dark:text-ocean-400 uppercase tracking-wide mb-1">This Property</div>
+                      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{fmtZar(radiusData.selected_property.market_value_zar)}</div>
+                      <div className="text-xs text-gray-500">{radiusData.selected_property.value_per_sqm ? `R ${radiusData.selected_property.value_per_sqm.toLocaleString()}/m²` : ''}</div>
+                    </div>
+                  )}
+
+                  {/* Radius results */}
+                  {radiusData.count > 0 ? (
+                    <>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {radiusData.count} valued properties within {radiusData.radius_km} km
+                        {radiusData.total_in_radius ? ` (${radiusData.total_in_radius} total)` : ''}
+                      </div>
+                      <ComparisonCard label={`Cheapest in ${radiusData.radius_km} km`} data={radiusData.cheapest} color="border-green-500" />
+                      <ComparisonCard label={`Most Expensive in ${radiusData.radius_km} km`} data={radiusData.most_expensive} color="border-red-500" />
+                      {radiusData.stats && (
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                            <div className="text-gray-400">Median Value</div>
+                            <div className="font-semibold text-gray-900 dark:text-gray-100">{fmtZar(radiusData.stats.median_value)}</div>
+                          </div>
+                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                            <div className="text-gray-400">Median /m²</div>
+                            <div className="font-semibold text-gray-900 dark:text-gray-100">{radiusData.stats.median_per_sqm ? `R ${radiusData.stats.median_per_sqm.toLocaleString()}` : '\u2014'}</div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-xs text-gray-400 italic">No valued properties found in radius. Valuations are fetched on demand from the City of Cape Town — try a larger radius.</div>
+                  )}
+                </>
+              )}
+
+              {/* Suburb comparison */}
+              {comparisonRun && suburbData && suburbData.count > 0 && (
+                <>
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-2">
+                    <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Suburb: {suburbData.suburb} ({suburbData.count} valued)
+                    </div>
+                    <ComparisonCard label="Cheapest in Suburb" data={suburbData.cheapest} color="border-green-500" />
+                    <ComparisonCard label="Most Expensive in Suburb" data={suburbData.most_expensive} color="border-red-500" />
+                    {suburbData.stats && (
+                      <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                          <div className="text-gray-400">Suburb Median</div>
+                          <div className="font-semibold text-gray-900 dark:text-gray-100">{fmtZar(suburbData.stats.median_value)}</div>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                          <div className="text-gray-400">Suburb /m²</div>
+                          <div className="font-semibold text-gray-900 dark:text-gray-100">{suburbData.stats.median_per_sqm ? `R ${suburbData.stats.median_per_sqm.toLocaleString()}` : '\u2014'}</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Construction cost */}
+              {comparisonRun && constructionCost && constructionCost.cost_per_sqm && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-2">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <Hammer className="w-3.5 h-3.5 text-amber-500" />
+                    Construction Cost
+                  </div>
+                  <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2.5">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{constructionCost.label}</div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5">
+                      R {constructionCost.cost_per_sqm.toLocaleString()}/m²
+                    </div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">
+                      Range: R {constructionCost.cost_range[0].toLocaleString()} – R {constructionCost.cost_range[1].toLocaleString()}/m²
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-[10px] text-gray-400 leading-relaxed">
+                Property values from City of Cape Town GV2022 Municipal Valuation Roll (market value as at 1 July 2022).
+                Construction costs based on AECOM Africa Cost Guide 2024/25.
+              </p>
+            </div>
+          </Section>
 
           {/* Net Zero Scorecard */}
           {netzero && !netzero.error && (

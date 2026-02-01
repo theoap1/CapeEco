@@ -48,6 +48,7 @@ from netzero_engine import (
     calculate_water_harvesting,
     netzero_scorecard,
 )
+from comparison_engine import compare_radius, compare_suburb, get_construction_costs
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -127,10 +128,23 @@ async def lifespan(app: FastAPI):
                 )
             """))
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_users_email ON capeeco.users(email)"))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS capeeco.property_valuations (
+                    id                  BIGSERIAL PRIMARY KEY,
+                    property_id         BIGINT NOT NULL REFERENCES capeeco.properties(id) UNIQUE,
+                    property_reference  VARCHAR(50),
+                    market_value_zar    NUMERIC(15,2),
+                    valuation_date      DATE DEFAULT '2022-07-01',
+                    rating_category     VARCHAR(100),
+                    fetched_at          TIMESTAMPTZ DEFAULT NOW()
+                )
+            """))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_pv_property ON capeeco.property_valuations(property_id)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_pv_market_value ON capeeco.property_valuations(market_value_zar)"))
             conn.commit()
-            print("STARTUP: users table ready", flush=True)
+            print("STARTUP: users + property_valuations tables ready", flush=True)
     except Exception as e:
-        print(f"STARTUP: users table check failed: {e}", flush=True)
+        print(f"STARTUP: table check failed: {e}", flush=True)
     yield
     engine.dispose()
 
@@ -420,6 +434,44 @@ def get_constraint_map(property_id: int, _user: dict = Depends(get_current_user)
         raise HTTPException(status_code=404, detail="Property not found")
 
     return generate_constraint_map(row["erf_number"], suburb=row["suburb"])
+
+
+# ---------------------------------------------------------------------------
+# Property comparison endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/api/property/{property_id}/compare/radius")
+def compare_property_radius(
+    property_id: int,
+    radius_km: float = Query(1.0, ge=0.1, le=10.0),
+    _user: dict = Depends(get_current_user),
+):
+    """Compare property valuations within a radius."""
+    result = compare_radius(property_id, radius_km)
+    if result.get("error") == "Property not found":
+        raise HTTPException(status_code=404, detail="Property not found")
+    return result
+
+
+@app.get("/api/property/{property_id}/compare/suburb")
+def compare_property_suburb(property_id: int, _user: dict = Depends(get_current_user)):
+    """Compare property valuations within the same suburb."""
+    result = compare_suburb(property_id)
+    if result.get("error") == "Property not found":
+        raise HTTPException(status_code=404, detail="Property not found")
+    return result
+
+
+@app.get("/api/property/{property_id}/construction-cost")
+def get_property_construction_cost(property_id: int, _user: dict = Depends(get_current_user)):
+    """Get construction cost benchmarks for the property's zoning type."""
+    with engine.connect() as conn:
+        row = conn.execute(text(f"""
+            SELECT zoning_primary FROM {SCHEMA}.properties WHERE id = :id
+        """), {"id": property_id}).mappings().fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Property not found")
+    return get_construction_costs(row["zoning_primary"])
 
 
 # ---------------------------------------------------------------------------

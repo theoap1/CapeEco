@@ -1,8 +1,8 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, Circle, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { CT_CENTER, CT_ZOOM, CBA_COLORS } from '../utils/constants';
+import { CT_CENTER, CT_ZOOM, CBA_COLORS, COMPARISON_COLORS } from '../utils/constants';
 import { getBiodiversityLayer, getPropertiesLayer } from '../utils/api';
 
 // Fix Leaflet default icon issue with bundlers
@@ -89,6 +89,20 @@ function SelectedPropertyLayer({ geojson }) {
   return null;
 }
 
+// Custom colored marker icons
+function createColoredIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:24px;height:24px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -14],
+  });
+}
+
+const cheapestIcon = createColoredIcon(COMPARISON_COLORS.cheapest.fill);
+const expensiveIcon = createColoredIcon(COMPARISON_COLORS.most_expensive.fill);
+
 export default function InteractiveMap({
   dark,
   flyToCenter,
@@ -97,6 +111,7 @@ export default function InteractiveMap({
   onPropertyClick,
   showBioLayer,
   constraintMapData,
+  comparisonData,
 }) {
   const [baseLayer, setBaseLayer] = useState('osm');
   const [bioData, setBioData] = useState(null);
@@ -223,6 +238,55 @@ export default function InteractiveMap({
               layer.bindTooltip(p.layer?.replace('_', ' ') || '', { sticky: true });
             }}
           />
+        )}
+
+        {/* Comparison radius circle */}
+        {comparisonData?.center && (
+          <Circle
+            center={comparisonData.center}
+            radius={comparisonData.radiusKm * 1000}
+            pathOptions={{
+              color: COMPARISON_COLORS.radius.stroke,
+              fillColor: COMPARISON_COLORS.radius.fill,
+              fillOpacity: COMPARISON_COLORS.radius.opacity,
+              weight: 2,
+              dashArray: '6 4',
+            }}
+          />
+        )}
+
+        {/* Cheapest property marker */}
+        {comparisonData?.cheapest?.centroid_lat && (
+          <Marker
+            position={[comparisonData.cheapest.centroid_lat, comparisonData.cheapest.centroid_lon]}
+            icon={cheapestIcon}
+          >
+            <Popup>
+              <div className="text-xs">
+                <div className="font-semibold text-green-700">Cheapest</div>
+                <div>R {comparisonData.cheapest.market_value_zar?.toLocaleString()}</div>
+                {comparisonData.cheapest.value_per_sqm && <div>R {comparisonData.cheapest.value_per_sqm.toLocaleString()}/m²</div>}
+                <div className="text-gray-500">{comparisonData.cheapest.full_address || `ERF ${comparisonData.cheapest.erf_number}`}</div>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        {/* Most expensive property marker */}
+        {comparisonData?.mostExpensive?.centroid_lat && (
+          <Marker
+            position={[comparisonData.mostExpensive.centroid_lat, comparisonData.mostExpensive.centroid_lon]}
+            icon={expensiveIcon}
+          >
+            <Popup>
+              <div className="text-xs">
+                <div className="font-semibold text-red-700">Most Expensive</div>
+                <div>R {comparisonData.mostExpensive.market_value_zar?.toLocaleString()}</div>
+                {comparisonData.mostExpensive.value_per_sqm && <div>R {comparisonData.mostExpensive.value_per_sqm.toLocaleString()}/m²</div>}
+                <div className="text-gray-500">{comparisonData.mostExpensive.full_address || `ERF ${comparisonData.mostExpensive.erf_number}`}</div>
+              </div>
+            </Popup>
+          </Marker>
         )}
       </MapContainer>
 

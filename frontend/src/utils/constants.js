@@ -55,6 +55,25 @@ export const TERM_DEFINITIONS = {
   'Threat Status': 'SANBI ecosystem classification: CR (Critically Endangered), EN (Endangered), VU (Vulnerable), LT (Least Threatened). Higher threat status increases offset requirements.',
 };
 
+// Construction cost benchmarks (ZAR/m², Cape Town 2024/25)
+export const CONSTRUCTION_COSTS = {
+  residential_economic:  { label: 'Residential (Economic)', cost: 6500,  range: [5500, 8000] },
+  residential_standard:  { label: 'Residential (Standard)', cost: 13150, range: [10000, 17000] },
+  residential_high_end:  { label: 'Residential (High-end)', cost: 20000, range: [17000, 30000] },
+  residential_luxury:    { label: 'Residential (Luxury)',    cost: 35000, range: [30000, 75000] },
+  commercial_office:     { label: 'Commercial (Office)',     cost: 17500, range: [15000, 20000] },
+  commercial_retail:     { label: 'Commercial (Retail)',     cost: 15000, range: [12000, 18000] },
+  industrial:            { label: 'Industrial',              cost: 8000,  range: [6000, 12000] },
+  mixed_use:             { label: 'Mixed Use',               cost: 15000, range: [12000, 20000] },
+};
+
+// Comparison marker colors
+export const COMPARISON_COLORS = {
+  cheapest: { fill: '#22c55e', stroke: '#15803d', label: 'Cheapest' },
+  most_expensive: { fill: '#ef4444', stroke: '#b91c1c', label: 'Most Expensive' },
+  radius: { fill: '#3b82f6', stroke: '#1d4ed8', opacity: 0.08 },
+};
+
 // Cape Town center
 export const CT_CENTER = [-33.925, 18.475];
 export const CT_ZOOM = 11;
