@@ -200,7 +200,7 @@ def auth_register(body: UserCreate):
         conn.commit()
 
     user = dict(row._mapping)
-    token = create_access_token({"sub": user["id"]})
+    token = create_access_token({"sub": str(user["id"])})
     return {"access_token": token, "token_type": "bearer", "user": user}
 
 
@@ -224,7 +224,7 @@ def auth_login(body: UserLogin):
     if not user["is_active"]:
         raise HTTPException(403, "Account disabled")
 
-    token = create_access_token({"sub": user["id"]})
+    token = create_access_token({"sub": str(user["id"])})
     return {"access_token": token, "token_type": "bearer", "user": user}
 
 
