@@ -17,7 +17,7 @@ from sqlalchemy import create_engine, text
 
 log = logging.getLogger(__name__)
 
-SCHEMA = "capeeco"
+SCHEMA = os.environ.get("SITELINE_SCHEMA", "siteline")
 
 # Cape Town construction cost benchmarks (ZAR/m², 2024/2025)
 # Sources: AECOM Africa Cost Guide 2024/25, Ooba, StatsSA
@@ -67,7 +67,7 @@ def _conn_string():
     host = os.environ.get("PGHOST", "localhost")
     port = os.environ.get("PGPORT", "5432")
     user = os.environ.get("PGUSER", os.environ.get("USER", "postgres"))
-    name = os.environ.get("PGDATABASE", "capeeco")
+    name = os.environ.get("PGDATABASE", "siteline")
     return f"postgresql://{user}:{pw}@{host}:{port}/{name}" if pw else f"postgresql://{user}@{host}:{port}/{name}"
 
 
@@ -105,8 +105,6 @@ def compare_radius(property_id: int, radius_km: float = 1.0, max_properties: int
     Find properties within radius_km of the given property, fetch their
     valuations, and return cheapest/most expensive + stats.
     """
-    from valuation_scraper import fetch_and_cache_valuations
-
     radius_m = radius_km * 1000
 
     with _connection() as conn:
@@ -154,9 +152,15 @@ def compare_radius(property_id: int, radius_km: float = 1.0, max_properties: int
             "properties": [],
         }
 
-    # Fetch valuations for all nearby + selected
+    # Fetch cached valuations only (no live scraping)
     all_ids = [property_id] + [n["id"] for n in nearby_list]
-    valuations = fetch_and_cache_valuations(all_ids)
+    with _connection() as conn2:
+        cached = conn2.execute(text(f"""
+            SELECT property_id, market_value_zar
+            FROM {SCHEMA}.property_valuations
+            WHERE property_id = ANY(:ids) AND market_value_zar IS NOT NULL
+        """), {"ids": all_ids}).mappings().fetchall()
+    valuations = {r["property_id"]: float(r["market_value_zar"]) for r in cached}
 
     # Attach values and filter to properties with valuations
     selected_val = valuations.get(property_id)
@@ -213,8 +217,6 @@ def compare_suburb(property_id: int, max_properties: int = 500) -> dict:
     """
     Find cheapest/most expensive properties in the same suburb.
     """
-    from valuation_scraper import fetch_and_cache_valuations
-
     with _connection() as conn:
         prop = conn.execute(text(f"""
             SELECT id, erf_number, suburb, area_sqm, zoning_primary,
@@ -252,8 +254,15 @@ def compare_suburb(property_id: int, max_properties: int = 500) -> dict:
             "properties": [],
         }
 
+    # Fetch cached valuations only (no live scraping)
     all_ids = [property_id] + [s["id"] for s in suburb_list]
-    valuations = fetch_and_cache_valuations(all_ids)
+    with _connection() as conn2:
+        cached = conn2.execute(text(f"""
+            SELECT property_id, market_value_zar
+            FROM {SCHEMA}.property_valuations
+            WHERE property_id = ANY(:ids) AND market_value_zar IS NOT NULL
+        """), {"ids": all_ids}).mappings().fetchall()
+    valuations = {r["property_id"]: float(r["market_value_zar"]) for r in cached}
 
     selected_val = valuations.get(property_id)
     valued = []

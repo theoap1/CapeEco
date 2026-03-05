@@ -381,12 +381,12 @@ async function exportToPDF(contentRef, reportData) {
       // Footer
       pdf.setFontSize(7);
       pdf.setTextColor(150);
-      pdf.text(`CapeEco Development Potential Report — ${reportData.report_id}`, margin, pageHeight - 8);
+      pdf.text(`Siteline Development Potential Report — ${reportData.report_id}`, margin, pageHeight - 8);
       pdf.text(`Page ${page + 1} of ${totalPages}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
       pdf.text('CONFIDENTIAL — For authorised use only', pageWidth / 2, pageHeight - 8, { align: 'center' });
     }
 
-    const fileName = `CapeEco_Report_${reportData.property.erf_number}_${reportData.property.suburb.replace(/\s+/g, '_')}.pdf`;
+    const fileName = `Siteline_Report_${reportData.property.erf_number}_${reportData.property.suburb.replace(/\s+/g, '_')}.pdf`;
     pdf.save(fileName);
   } finally {
     // Restore scroll container styles
@@ -833,7 +833,7 @@ export default function ReportView({ propertyId, onClose }) {
             {/* ─── DISCLAIMER ─── */}
             <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
               <p className="text-[10px] text-gray-400 leading-relaxed">
-                <strong>DISCLAIMER:</strong> {disclaimer || 'This report is a desktop-level screening assessment based on publicly available spatial data from the City of Cape Town Open Data Portal. It does not constitute a formal Environmental Impact Assessment, Heritage Impact Assessment, or any other statutory assessment. All findings should be verified by suitably qualified professionals before making investment or development decisions. Offset cost estimates are indicative only and subject to market conditions. CapeEco accepts no liability for decisions made based on this report.'}
+                <strong>DISCLAIMER:</strong> {disclaimer || 'This report is a desktop-level screening assessment based on publicly available spatial data from the City of Cape Town Open Data Portal. It does not constitute a formal Environmental Impact Assessment, Heritage Impact Assessment, or any other statutory assessment. All findings should be verified by suitably qualified professionals before making investment or development decisions. Offset cost estimates are indicative only and subject to market conditions. Siteline accepts no liability for decisions made based on this report.'}
               </p>
               <p className="text-[10px] text-gray-400 mt-2">
                 Data sources: City of Cape Town BioNet (2023), CCT Heritage Resources Audit, CCT Open Data Portal, NHRA Register.
@@ -845,7 +845,7 @@ export default function ReportView({ propertyId, onClose }) {
                   <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-ocean-500 to-protea-600 flex items-center justify-center">
                     <Leaf className="w-3 h-3 text-white" />
                   </div>
-                  <span className="text-xs font-bold text-gray-400">CapeEco</span>
+                  <span className="text-xs font-bold text-gray-400">Siteline</span>
                 </div>
                 <span className="text-[10px] text-gray-400">Generated {data.report_date}</span>
               </div>

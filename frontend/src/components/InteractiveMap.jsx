@@ -59,6 +59,14 @@ function FlyTo({ center, zoom }) {
   return null;
 }
 
+function MapRefSetter({ onMapReady }) {
+  const map = useMap();
+  useEffect(() => {
+    onMapReady?.(map);
+  }, [map, onMapReady]);
+  return null;
+}
+
 // Selected property highlight
 function SelectedPropertyLayer({ geojson }) {
   const map = useMap();
@@ -111,7 +119,9 @@ export default function InteractiveMap({
   onPropertyClick,
   showBioLayer,
   constraintMapData,
+  sitePlanData,
   comparisonData,
+  onMapReady,
 }) {
   const [baseLayer, setBaseLayer] = useState('osm');
   const [bioData, setBioData] = useState(null);
@@ -176,6 +186,38 @@ export default function InteractiveMap({
     }
   }, [bioStyle]);
 
+  const SITE_PLAN_LABELS = {
+    property_boundary: 'Property Boundary',
+    buildable_envelope: 'Buildable Envelope',
+    setback_zone: 'Setback Zone',
+    biodiversity_constraint: 'Biodiversity Constraint',
+    building_footprint: 'Building Footprint',
+    floor_plate: 'Floor Plate',
+    parking_zone: 'Parking Zone',
+  };
+
+  const sitePlanStyle = useCallback((feature) => {
+    const layer = feature.properties.layer;
+    switch (layer) {
+      case 'property_boundary':
+        return { color: '#3b98f5', weight: 2.5, fillOpacity: 0, dashArray: '6 3' };
+      case 'buildable_envelope':
+        return { color: '#22c55e', weight: 2.5, fillColor: '#22c55e', fillOpacity: 0.12 };
+      case 'setback_zone':
+        return { color: '#f97316', weight: 1.5, fillColor: '#f97316', fillOpacity: 0.15, dashArray: '4 4' };
+      case 'biodiversity_constraint':
+        return { color: '#ef4444', weight: 2, fillColor: '#ef4444', fillOpacity: 0.25 };
+      case 'building_footprint':
+        return { color: '#6366f1', weight: 2.5, fillColor: '#6366f1', fillOpacity: 0.3 };
+      case 'floor_plate':
+        return { color: '#8b5cf6', weight: 1, fillColor: '#a78bfa', fillOpacity: 0.2, dashArray: '2 2' };
+      case 'parking_zone':
+        return { color: '#64748b', weight: 1.5, fillColor: '#94a3b8', fillOpacity: 0.2 };
+      default:
+        return { color: '#9ca3af', weight: 1, fillOpacity: 0.1 };
+    }
+  }, []);
+
   const onEachProperty = useCallback((feature, layer) => {
     layer.on('click', () => {
       onPropertyClick?.(feature.properties);
@@ -198,6 +240,7 @@ export default function InteractiveMap({
       >
         <TileLayer url={tile.url} attribution={tile.attribution} maxZoom={19} />
 
+        {onMapReady && <MapRefSetter onMapReady={onMapReady} />}
         <MapEvents onPropertyClick={onPropertyClick} onMoveEnd={handleMoveEnd} />
 
         {flyToCenter && <FlyTo center={flyToCenter} zoom={flyToZoom} />}
@@ -236,6 +279,24 @@ export default function InteractiveMap({
             onEachFeature={(feature, layer) => {
               const p = feature.properties;
               layer.bindTooltip(p.layer?.replace('_', ' ') || '', { sticky: true });
+            }}
+          />
+        )}
+
+        {sitePlanData && sitePlanData.features?.length > 0 && (
+          <GeoJSON
+            key={'siteplan-' + JSON.stringify(sitePlanData).slice(0, 50)}
+            data={sitePlanData}
+            style={sitePlanStyle}
+            onEachFeature={(feature, layer) => {
+              const p = feature.properties;
+              const label = SITE_PLAN_LABELS[p.layer] || p.layer?.replace('_', ' ') || '';
+              const details = [];
+              if (p.floor) details.push(`Floor ${p.floor}`);
+              if (p.use_type) details.push(p.use_type);
+              if (p.area_sqm) details.push(`${Math.round(p.area_sqm)} m²`);
+              const tip = details.length > 0 ? `${label}: ${details.join(' · ')}` : label;
+              layer.bindTooltip(tip, { sticky: true });
             }}
           />
         )}

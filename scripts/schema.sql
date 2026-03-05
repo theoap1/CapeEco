@@ -1,4 +1,4 @@
--- Cape Town Eco-Property Intelligence: Database Schema
+-- Siteline — Property Development Intelligence: Database Schema
 -- PostgreSQL 15 + PostGIS 3.x
 -- All geometries stored in EPSG:4326 (WGS84) for web mapping compatibility
 -- Source data arrives in EPSG:3857 (Web Mercator) and is reprojected on load
@@ -12,15 +12,15 @@ CREATE EXTENSION IF NOT EXISTS postgis_topology;
 -- =============================================================================
 -- SCHEMA
 -- =============================================================================
-DROP SCHEMA IF EXISTS capeeco CASCADE;
-CREATE SCHEMA capeeco;
-SET search_path TO capeeco, public;
+DROP SCHEMA IF EXISTS siteline CASCADE;
+CREATE SCHEMA siteline;
+SET search_path TO siteline, public;
 
 -- =============================================================================
 -- ENUM TYPES (for constrained values discovered in actual data)
 -- =============================================================================
 
-CREATE TYPE capeeco.cba_category AS ENUM (
+CREATE TYPE siteline.cba_category AS ENUM (
     'PA',       -- Protected Area
     'CA',       -- Conservation Area
     'CBA 1a',   -- Critical Biodiversity Area 1a (irreplaceable, high/medium condition)
@@ -32,14 +32,14 @@ CREATE TYPE capeeco.cba_category AS ENUM (
     'ONA'       -- Other Natural Area
 );
 
-CREATE TYPE capeeco.ecosystem_threat_status AS ENUM (
+CREATE TYPE siteline.ecosystem_threat_status AS ENUM (
     'CR',   -- Critically Endangered
     'EN',   -- Endangered
     'VU',   -- Vulnerable
     'LT'    -- Least Threatened
 );
 
-CREATE TYPE capeeco.habitat_condition AS ENUM (
+CREATE TYPE siteline.habitat_condition AS ENUM (
     'Natural',
     'Good',
     'Fair',
@@ -61,7 +61,7 @@ CREATE TYPE capeeco.habitat_condition AS ENUM (
 --   - area_sqm computed from geometry in EPSG:3857 for accuracy (not from source SHAPE_Area
 --     which is in decimal degrees squared)
 -- =============================================================================
-CREATE TABLE capeeco.properties (
+CREATE TABLE siteline.properties (
     id              BIGSERIAL PRIMARY KEY,
     objectid        INTEGER,                    -- Source OBJECTID
     sg26_code       VARCHAR(30) UNIQUE NOT NULL, -- Surveyor General 26-digit code (actual unique key)
@@ -101,10 +101,10 @@ CREATE TABLE capeeco.properties (
 -- Source: cct_terrestrial_biodiversity_network_2025.geojson (~5k polygons, 90MB)
 -- One row per BioNet polygon. Properties are linked via spatial intersection.
 -- =============================================================================
-CREATE TABLE capeeco.biodiversity_areas (
+CREATE TABLE siteline.biodiversity_areas (
     id              BIGSERIAL PRIMARY KEY,
     objectid        INTEGER,
-    cba_category    capeeco.cba_category NOT NULL,
+    cba_category    siteline.cba_category NOT NULL,
     cba_name        VARCHAR(200),               -- Full name: "Critical Biodiversity Area 1a"
     subtype         TEXT,                        -- SBTY description
     sdf_category    VARCHAR(100),                -- SDF_CTGR: "Core 1: CBA", "Buffer 1", etc.
@@ -113,7 +113,7 @@ CREATE TABLE capeeco.biodiversity_areas (
     objective       TEXT,                        -- OBJC
     action          TEXT,                        -- ACTN
     compatible_use  TEXT,                        -- CMPT_ACTV
-    habitat_cond    capeeco.habitat_condition,   -- HBT_CNDT
+    habitat_cond    siteline.habitat_condition,   -- HBT_CNDT
     esa_significance VARCHAR(100),               -- CESA_SGNF: "Animal Movement", "Fire Regime"
     protected_area  VARCHAR(200),                -- NAME_PRTC_AREA
     proclaimed      VARCHAR(100),                -- PRCL
@@ -132,13 +132,13 @@ CREATE TABLE capeeco.biodiversity_areas (
 -- Source: cct_sanbi_ecosystem_status_2011.geojson + cct_indigenous_vegetation_current_2025.geojson
 -- Vegetation type polygons with threat status.
 -- =============================================================================
-CREATE TABLE capeeco.ecosystem_types (
+CREATE TABLE siteline.ecosystem_types (
     id                  BIGSERIAL PRIMARY KEY,
     objectid            INTEGER,
     vegetation_type     VARCHAR(200),           -- NTNL_VGTN_TYPE
     vegetation_subtype  VARCHAR(200),           -- VGTN_SBTY
     community           VARCHAR(200),           -- CMNT
-    threat_status       capeeco.ecosystem_threat_status, -- ECSY_STS_2011
+    threat_status       siteline.ecosystem_threat_status, -- ECSY_STS_2011
     area_ha             DOUBLE PRECISION,       -- AREA_HCTR
     perimeter_m         DOUBLE PRECISION,
 
@@ -152,7 +152,7 @@ CREATE TABLE capeeco.ecosystem_types (
 -- Source: cct_wetlands_2025.geojson
 -- Aquatic biodiversity network features.
 -- =============================================================================
-CREATE TABLE capeeco.wetlands (
+CREATE TABLE siteline.wetlands (
     id              BIGSERIAL PRIMARY KEY,
     objectid        INTEGER,
     geom            geometry(MultiPolygon, 4326) NOT NULL,
@@ -164,7 +164,7 @@ CREATE TABLE capeeco.wetlands (
 -- TABLE: urban_edges
 -- Source: cct_urban_development_edge_2025.geojson + cct_coastal_urban_edge_2025.geojson
 -- =============================================================================
-CREATE TABLE capeeco.urban_edges (
+CREATE TABLE siteline.urban_edges (
     id              BIGSERIAL PRIMARY KEY,
     objectid        INTEGER,
     edge_type       VARCHAR(50) NOT NULL,       -- 'development' or 'coastal'
@@ -177,7 +177,7 @@ CREATE TABLE capeeco.urban_edges (
 -- Source: cct_zoning_2025.geojson (~642MB, separate from property zoning)
 -- Full zoning scheme polygons with detailed attributes.
 -- =============================================================================
-CREATE TABLE capeeco.zoning_overlays (
+CREATE TABLE siteline.zoning_overlays (
     id              BIGSERIAL PRIMARY KEY,
     objectid        INTEGER,
     geom            geometry(MultiPolygon, 4326) NOT NULL,
@@ -188,7 +188,7 @@ CREATE TABLE capeeco.zoning_overlays (
 -- TABLE: heritage_sites
 -- Source: cct_heritage_inventory_2025.geojson + cct_nhra_protection_2025.geojson
 -- =============================================================================
-CREATE TABLE capeeco.heritage_sites (
+CREATE TABLE siteline.heritage_sites (
     id              BIGSERIAL PRIMARY KEY,
     objectid        INTEGER,
     source          VARCHAR(20) NOT NULL,       -- 'inventory' or 'nhra'
@@ -214,7 +214,7 @@ CREATE TABLE capeeco.heritage_sites (
 -- Source: cct_street_address_numbers_2025.geojson (~350MB, ~700k points)
 -- Used for geocoding.
 -- =============================================================================
-CREATE TABLE capeeco.address_points (
+CREATE TABLE siteline.address_points (
     id              BIGSERIAL PRIMARY KEY,
     objectid        INTEGER,
     address_number  INTEGER,
@@ -235,7 +235,7 @@ CREATE TABLE capeeco.address_points (
 -- TABLE: solar_installations
 -- Source: cct_smartfacility_solar_2025.geojson
 -- =============================================================================
-CREATE TABLE capeeco.solar_installations (
+CREATE TABLE siteline.solar_installations (
     id              BIGSERIAL PRIMARY KEY,
     objectid        INTEGER,
     geom            geometry(Point, 4326) NOT NULL,
@@ -246,7 +246,7 @@ CREATE TABLE capeeco.solar_installations (
 -- TABLE: environmental_focus_areas
 -- Source: cct_environmental_focus_areas_2025.geojson
 -- =============================================================================
-CREATE TABLE capeeco.environmental_focus_areas (
+CREATE TABLE siteline.environmental_focus_areas (
     id              BIGSERIAL PRIMARY KEY,
     objectid        INTEGER,
     name            VARCHAR(200),
@@ -261,12 +261,12 @@ CREATE TABLE capeeco.environmental_focus_areas (
 -- =============================================================================
 
 -- Spatial join: which biodiversity designations overlap each property
-CREATE TABLE capeeco.property_biodiversity (
+CREATE TABLE siteline.property_biodiversity (
     id                  BIGSERIAL PRIMARY KEY,
-    property_id         BIGINT NOT NULL REFERENCES capeeco.properties(id),
-    biodiversity_area_id BIGINT NOT NULL REFERENCES capeeco.biodiversity_areas(id),
-    cba_category        capeeco.cba_category NOT NULL,
-    habitat_condition   capeeco.habitat_condition,
+    property_id         BIGINT NOT NULL REFERENCES siteline.properties(id),
+    biodiversity_area_id BIGINT NOT NULL REFERENCES siteline.biodiversity_areas(id),
+    cba_category        siteline.cba_category NOT NULL,
+    habitat_condition   siteline.habitat_condition,
     overlap_area_sqm    DOUBLE PRECISION,       -- Area of intersection
     overlap_pct         DOUBLE PRECISION,       -- % of property covered by this designation
     created_at          TIMESTAMPTZ DEFAULT NOW(),
@@ -275,12 +275,12 @@ CREATE TABLE capeeco.property_biodiversity (
 );
 
 -- Spatial join: which ecosystem type each property falls in
-CREATE TABLE capeeco.property_ecosystems (
+CREATE TABLE siteline.property_ecosystems (
     id                  BIGSERIAL PRIMARY KEY,
-    property_id         BIGINT NOT NULL REFERENCES capeeco.properties(id),
-    ecosystem_type_id   BIGINT NOT NULL REFERENCES capeeco.ecosystem_types(id),
+    property_id         BIGINT NOT NULL REFERENCES siteline.properties(id),
+    ecosystem_type_id   BIGINT NOT NULL REFERENCES siteline.ecosystem_types(id),
     vegetation_type     VARCHAR(200),
-    threat_status       capeeco.ecosystem_threat_status,
+    threat_status       siteline.ecosystem_threat_status,
     overlap_area_sqm    DOUBLE PRECISION,
     overlap_pct         DOUBLE PRECISION,
     created_at          TIMESTAMPTZ DEFAULT NOW(),
@@ -289,34 +289,34 @@ CREATE TABLE capeeco.property_ecosystems (
 );
 
 -- Is the property inside or outside the urban edge?
-CREATE TABLE capeeco.property_urban_edge (
+CREATE TABLE siteline.property_urban_edge (
     id              BIGSERIAL PRIMARY KEY,
-    property_id     BIGINT NOT NULL REFERENCES capeeco.properties(id) UNIQUE,
+    property_id     BIGINT NOT NULL REFERENCES siteline.properties(id) UNIQUE,
     inside_urban_edge BOOLEAN NOT NULL,
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Property valuations (cached from GV2022 scraper)
-CREATE TABLE capeeco.property_valuations (
+CREATE TABLE siteline.property_valuations (
     id                  BIGSERIAL PRIMARY KEY,
-    property_id         BIGINT NOT NULL REFERENCES capeeco.properties(id) UNIQUE,
+    property_id         BIGINT NOT NULL REFERENCES siteline.properties(id) UNIQUE,
     property_reference  VARCHAR(50),
     market_value_zar    NUMERIC(15,2),
     valuation_date      DATE DEFAULT '2022-07-01',
     rating_category     VARCHAR(100),
     fetched_at          TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_pv_property ON capeeco.property_valuations(property_id);
-CREATE INDEX idx_pv_market_value ON capeeco.property_valuations(market_value_zar);
+CREATE INDEX idx_pv_property ON siteline.property_valuations(property_id);
+CREATE INDEX idx_pv_market_value ON siteline.property_valuations(market_value_zar);
 
 -- Offset calculation results (per development proposal)
-CREATE TABLE capeeco.offset_calculations (
+CREATE TABLE siteline.offset_calculations (
     id                          BIGSERIAL PRIMARY KEY,
-    property_id                 BIGINT NOT NULL REFERENCES capeeco.properties(id),
+    property_id                 BIGINT NOT NULL REFERENCES siteline.properties(id),
     proposed_footprint_sqm      DOUBLE PRECISION NOT NULL,
-    cba_category                capeeco.cba_category,
-    ecosystem_threat_status     capeeco.ecosystem_threat_status,
-    habitat_condition           capeeco.habitat_condition,
+    cba_category                siteline.cba_category,
+    ecosystem_threat_status     siteline.ecosystem_threat_status,
+    habitat_condition           siteline.habitat_condition,
     base_ratio                  DOUBLE PRECISION,
     condition_multiplier        DOUBLE PRECISION,
     urban_edge_adjustment       DOUBLE PRECISION,
@@ -330,7 +330,7 @@ CREATE TABLE capeeco.offset_calculations (
 );
 
 -- Rainfall station data (tabular)
-CREATE TABLE capeeco.rainfall_stations (
+CREATE TABLE siteline.rainfall_stations (
     id              SERIAL PRIMARY KEY,
     station_id      VARCHAR(50) UNIQUE NOT NULL,
     station_name    VARCHAR(200),
@@ -338,7 +338,7 @@ CREATE TABLE capeeco.rainfall_stations (
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE capeeco.rainfall_data (
+CREATE TABLE siteline.rainfall_data (
     id              BIGSERIAL PRIMARY KEY,
     station_id      VARCHAR(50) NOT NULL,
     observation_date DATE NOT NULL,
@@ -347,9 +347,9 @@ CREATE TABLE capeeco.rainfall_data (
 );
 
 -- Solar potential per property (computed)
-CREATE TABLE capeeco.solar_potential (
+CREATE TABLE siteline.solar_potential (
     id                  BIGSERIAL PRIMARY KEY,
-    property_id         BIGINT NOT NULL REFERENCES capeeco.properties(id) UNIQUE,
+    property_id         BIGINT NOT NULL REFERENCES siteline.properties(id) UNIQUE,
     roof_area_sqm       DOUBLE PRECISION,
     annual_kwh_estimate DOUBLE PRECISION,
     annual_kwh_per_sqm  DOUBLE PRECISION,       -- Based on Cape Town avg solar irradiance
@@ -362,20 +362,20 @@ CREATE TABLE capeeco.solar_potential (
 -- STAGING TABLES (for safe data loading with rollback capability)
 -- Loader writes to staging first, validates, then promotes to production tables.
 -- =============================================================================
-CREATE TABLE capeeco.staging_properties      (LIKE capeeco.properties      INCLUDING ALL);
-CREATE TABLE capeeco.staging_biodiversity     (LIKE capeeco.biodiversity_areas INCLUDING ALL);
-CREATE TABLE capeeco.staging_ecosystem_types  (LIKE capeeco.ecosystem_types  INCLUDING ALL);
-CREATE TABLE capeeco.staging_address_points   (LIKE capeeco.address_points   INCLUDING ALL);
-CREATE TABLE capeeco.staging_heritage         (LIKE capeeco.heritage_sites   INCLUDING ALL);
+CREATE TABLE siteline.staging_properties      (LIKE siteline.properties      INCLUDING ALL);
+CREATE TABLE siteline.staging_biodiversity     (LIKE siteline.biodiversity_areas INCLUDING ALL);
+CREATE TABLE siteline.staging_ecosystem_types  (LIKE siteline.ecosystem_types  INCLUDING ALL);
+CREATE TABLE siteline.staging_address_points   (LIKE siteline.address_points   INCLUDING ALL);
+CREATE TABLE siteline.staging_heritage         (LIKE siteline.heritage_sites   INCLUDING ALL);
 
 -- Drop the FK constraints and unique constraints on staging tables (they interfere with bulk load)
 -- Staging tables are validated before promotion
-ALTER TABLE capeeco.staging_properties DROP CONSTRAINT IF EXISTS staging_properties_sg26_code_key;
-ALTER TABLE capeeco.staging_properties DROP CONSTRAINT IF EXISTS staging_properties_pkey;
-ALTER TABLE capeeco.staging_biodiversity DROP CONSTRAINT IF EXISTS staging_biodiversity_pkey;
-ALTER TABLE capeeco.staging_ecosystem_types DROP CONSTRAINT IF EXISTS staging_ecosystem_types_pkey;
-ALTER TABLE capeeco.staging_address_points DROP CONSTRAINT IF EXISTS staging_address_points_pkey;
-ALTER TABLE capeeco.staging_heritage DROP CONSTRAINT IF EXISTS staging_heritage_pkey;
+ALTER TABLE siteline.staging_properties DROP CONSTRAINT IF EXISTS staging_properties_sg26_code_key;
+ALTER TABLE siteline.staging_properties DROP CONSTRAINT IF EXISTS staging_properties_pkey;
+ALTER TABLE siteline.staging_biodiversity DROP CONSTRAINT IF EXISTS staging_biodiversity_pkey;
+ALTER TABLE siteline.staging_ecosystem_types DROP CONSTRAINT IF EXISTS staging_ecosystem_types_pkey;
+ALTER TABLE siteline.staging_address_points DROP CONSTRAINT IF EXISTS staging_address_points_pkey;
+ALTER TABLE siteline.staging_heritage DROP CONSTRAINT IF EXISTS staging_heritage_pkey;
 
 -- =============================================================================
 -- INDEXES
@@ -390,21 +390,21 @@ ALTER TABLE capeeco.staging_heritage DROP CONSTRAINT IF EXISTS staging_heritage_
 -- =============================================================================
 -- COMMENTS
 -- =============================================================================
-COMMENT ON SCHEMA capeeco IS 'Cape Town Eco-Property Intelligence Platform';
-COMMENT ON TABLE capeeco.properties IS 'Land parcels (erven) from CCT cadastral data. ~400k rows.';
-COMMENT ON TABLE capeeco.biodiversity_areas IS 'BioNet 2024 CBA/ESA polygons. ~5k rows.';
-COMMENT ON TABLE capeeco.ecosystem_types IS 'SANBI vegetation ecosystem status. ~25 types, ~2k polygons.';
-COMMENT ON TABLE capeeco.property_biodiversity IS 'Spatial join: property × biodiversity. Computed post-load.';
-COMMENT ON TABLE capeeco.property_ecosystems IS 'Spatial join: property × ecosystem type. Computed post-load.';
-COMMENT ON TABLE capeeco.property_urban_edge IS 'Is property inside/outside urban development edge. Computed post-load.';
-COMMENT ON COLUMN capeeco.properties.erf_number IS 'Property number. TEXT because formats include "10-RE", "102-0-1", "10202-0-2" for remainders and subdivisions.';
-COMMENT ON COLUMN capeeco.properties.sg26_code IS 'Surveyor General 26-digit code. The true unique identifier for SA land parcels.';
-COMMENT ON COLUMN capeeco.properties.zoning_raw IS 'Raw zoning. Split-zoned parcels have comma-separated multi-values that can be hundreds of chars.';
+COMMENT ON SCHEMA siteline IS 'Cape Town Eco-Property Intelligence Platform';
+COMMENT ON TABLE siteline.properties IS 'Land parcels (erven) from CCT cadastral data. ~400k rows.';
+COMMENT ON TABLE siteline.biodiversity_areas IS 'BioNet 2024 CBA/ESA polygons. ~5k rows.';
+COMMENT ON TABLE siteline.ecosystem_types IS 'SANBI vegetation ecosystem status. ~25 types, ~2k polygons.';
+COMMENT ON TABLE siteline.property_biodiversity IS 'Spatial join: property × biodiversity. Computed post-load.';
+COMMENT ON TABLE siteline.property_ecosystems IS 'Spatial join: property × ecosystem type. Computed post-load.';
+COMMENT ON TABLE siteline.property_urban_edge IS 'Is property inside/outside urban development edge. Computed post-load.';
+COMMENT ON COLUMN siteline.properties.erf_number IS 'Property number. TEXT because formats include "10-RE", "102-0-1", "10202-0-2" for remainders and subdivisions.';
+COMMENT ON COLUMN siteline.properties.sg26_code IS 'Surveyor General 26-digit code. The true unique identifier for SA land parcels.';
+COMMENT ON COLUMN siteline.properties.zoning_raw IS 'Raw zoning. Split-zoned parcels have comma-separated multi-values that can be hundreds of chars.';
 
 -- =============================================================================
 -- USERS (authentication)
 -- =============================================================================
-CREATE TABLE IF NOT EXISTS capeeco.users (
+CREATE TABLE IF NOT EXISTS siteline.users (
     id          BIGSERIAL PRIMARY KEY,
     email       VARCHAR(255) UNIQUE NOT NULL,
     hashed_password VARCHAR(255) NOT NULL,
@@ -414,4 +414,4 @@ CREATE TABLE IF NOT EXISTS capeeco.users (
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_email ON capeeco.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_email ON siteline.users(email);

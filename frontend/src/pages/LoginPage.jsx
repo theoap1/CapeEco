@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Leaf, Mail, Lock, User, Loader2, AlertTriangle } from 'lucide-react';
+import { Building2, Mail, Lock, User, Loader2, AlertTriangle } from 'lucide-react';
 
 export default function LoginPage() {
   const { login, register, isAuthenticated } = useAuth();
-  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -33,27 +33,53 @@ export default function LoginPage() {
   if (isAuthenticated) return <Navigate to="/" replace />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ocean-600 via-ocean-700 to-ocean-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated mesh gradient background */}
+      <div
+        className="absolute inset-0 animate-gradient"
+        style={{
+          background: `
+            radial-gradient(ellipse 80% 60% at 20% 30%, rgb(37 121 234 / 0.12), transparent 60%),
+            radial-gradient(ellipse 70% 50% at 80% 70%, rgb(201 106 43 / 0.10), transparent 60%),
+            radial-gradient(ellipse 90% 70% at 50% 50%, rgb(37 121 234 / 0.06), transparent 70%)
+          `,
+          backgroundSize: '200% 200%',
+        }}
+      />
+
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm mb-4">
-            <Leaf className="w-8 h-8 text-white" />
+        <div className="text-center mb-8 animate-fade-up delay-1">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-ocean-500/20 backdrop-blur-sm mb-4 border border-ocean-500/30 animate-glow">
+            <Building2 className="w-8 h-8 text-ocean-400" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">CapeEco</h1>
-          <p className="text-ocean-200 mt-1 text-sm">Cape Town Eco-Property Intelligence</p>
+        </div>
+
+        {/* Title */}
+        <div className="text-center mb-8 animate-fade-up delay-2">
+          <h1 className="text-3xl font-bold text-white tracking-tight">Siteline</h1>
+        </div>
+
+        {/* Taglines */}
+        <div className="text-center mb-8 animate-fade-up delay-3">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-[0.2em]">
+            Property Development Intelligence
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            South Africa's development data, unified.
+          </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8">
+        <div className="bg-gray-800/50 backdrop-blur-xl border border-ocean-500/10 rounded-2xl shadow-2xl p-8 animate-fade-up delay-4">
           {/* Tabs */}
-          <div className="flex mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+          <div className="flex mb-6 bg-gray-900/50 rounded-xl p-1">
             <button
               onClick={() => { setMode('login'); setError(''); }}
               className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
                 mode === 'login'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                  ? 'bg-ocean-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-gray-200'
               }`}
             >
               Sign In
@@ -62,59 +88,57 @@ export default function LoginPage() {
               onClick={() => { setMode('register'); setError(''); }}
               className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
                 mode === 'register'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                  ? 'bg-ocean-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-gray-200'
               }`}
             >
               Create Account
             </button>
           </div>
 
-          {/* Error */}
           {error && (
-            <div className="mb-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl p-3 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-              <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+            <div className="mb-4 bg-red-900/30 border border-red-800/50 rounded-xl p-3 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+              <p className="text-sm text-red-300">{error}</p>
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Full Name</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">Full Name</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                   <input
                     type="text"
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
                     placeholder="Your name"
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-900/50 border border-gray-700 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
                   placeholder="you@example.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-900/50 border border-gray-700 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
                   type="password"
                   value={password}
@@ -122,7 +146,7 @@ export default function LoginPage() {
                   required
                   minLength={6}
                   placeholder={mode === 'register' ? 'Min 6 characters' : 'Your password'}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-900/50 border border-gray-700 rounded-xl text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent transition-all"
                 />
               </div>
             </div>
@@ -130,7 +154,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-ocean-500 to-ocean-600 hover:from-ocean-600 hover:to-ocean-700 text-white font-semibold rounded-xl shadow-lg shadow-ocean-500/25 hover:shadow-ocean-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gradient-to-r from-ocean-600 to-ocean-500 hover:from-ocean-500 hover:to-ocean-400 text-white font-semibold rounded-xl shadow-lg shadow-ocean-600/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -144,9 +168,8 @@ export default function LoginPage() {
           </form>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-ocean-300 text-xs mt-6">
-          Built on free open data from the City of Cape Town
+        <p className="text-center text-gray-500 text-xs mt-6 animate-fade-up delay-5">
+          Built on South African open government data
         </p>
       </div>
     </div>

@@ -24,12 +24,12 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-DB_NAME = "capeeco"
+DB_NAME = os.environ.get("PGDATABASE", "siteline")
 DB_USER = os.environ.get("PGUSER", os.environ.get("USER", "postgres"))
 DB_HOST = os.environ.get("PGHOST", "localhost")
 DB_PORT = os.environ.get("PGPORT", "5432")
 DB_PASSWORD = os.environ.get("PGPASSWORD", "")
-SCHEMA = "capeeco"
+SCHEMA = os.environ.get("SITELINE_SCHEMA", "siteline")
 
 RULES_PATH = Path(__file__).parent.parent / "data" / "processed" / "offset_rules.json"
 

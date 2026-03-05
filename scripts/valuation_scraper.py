@@ -2,7 +2,7 @@
 """
 GV2022 Valuation Roll Scraper — fetches municipal property valuations from
 the City of Cape Town's GV2022 Provision Roll website and caches them in the
-capeeco.property_valuations table.
+siteline.property_valuations table.
 
 Public data source: https://web1.capetown.gov.za/web1/gv2022/
 """
@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 # Configuration
 # ---------------------------------------------------------------------------
 GV2022_URL = "https://web1.capetown.gov.za/web1/gv2022/Results"
-SCHEMA = "capeeco"
+SCHEMA = os.environ.get("SITELINE_SCHEMA", "siteline")
 REQUEST_DELAY = 1.0  # seconds between requests (be respectful)
 
 _last_request_time = 0.0
@@ -44,7 +44,7 @@ def _conn_string():
     host = os.environ.get("PGHOST", "localhost")
     port = os.environ.get("PGPORT", "5432")
     user = os.environ.get("PGUSER", os.environ.get("USER", "postgres"))
-    name = os.environ.get("PGDATABASE", "capeeco")
+    name = os.environ.get("PGDATABASE", "siteline")
     return f"postgresql://{user}:{pw}@{host}:{port}/{name}" if pw else f"postgresql://{user}@{host}:{port}/{name}"
 
 

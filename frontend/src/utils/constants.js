@@ -74,6 +74,75 @@ export const COMPARISON_COLORS = {
   radius: { fill: '#3b82f6', stroke: '#1d4ed8', opacity: 0.08 },
 };
 
+// Risk level → visual config
+export const RISK_LEVEL_CONFIG = {
+  Critical: { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/30', dot: 'bg-red-500', hex: '#ef4444' },
+  High:     { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/30', dot: 'bg-orange-500', hex: '#f97316' },
+  Medium:   { bg: 'bg-yellow-500/15', text: 'text-yellow-400', border: 'border-yellow-500/30', dot: 'bg-yellow-500', hex: '#eab308' },
+  Low:      { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/30', dot: 'bg-green-500', hex: '#22c55e' },
+};
+
+// Load shedding stage colors (1-8)
+export const STAGE_COLORS = {
+  1: { bg: 'bg-yellow-200', text: 'text-yellow-900', hex: '#fef08a' },
+  2: { bg: 'bg-yellow-300', text: 'text-yellow-900', hex: '#fde047' },
+  3: { bg: 'bg-yellow-400', text: 'text-yellow-900', hex: '#facc15' },
+  4: { bg: 'bg-amber-500', text: 'text-white', hex: '#f59e0b' },
+  5: { bg: 'bg-orange-500', text: 'text-white', hex: '#f97316' },
+  6: { bg: 'bg-red-500', text: 'text-white', hex: '#ef4444' },
+  7: { bg: 'bg-red-600', text: 'text-white', hex: '#dc2626' },
+  8: { bg: 'bg-red-800', text: 'text-white', hex: '#991b1b' },
+};
+
+// Municipal health score → color
+export const MUNI_HEALTH_COLORS = {
+  good:     { bg: 'bg-green-500/15', text: 'text-green-400', label: 'Good', hex: '#22c55e' },
+  fair:     { bg: 'bg-yellow-500/15', text: 'text-yellow-400', label: 'Fair', hex: '#eab308' },
+  poor:     { bg: 'bg-orange-500/15', text: 'text-orange-400', label: 'Poor', hex: '#f97316' },
+  critical: { bg: 'bg-red-500/15', text: 'text-red-400', label: 'Critical', hex: '#ef4444' },
+};
+
+export function getMuniHealthLevel(score) {
+  if (score >= 70) return 'good';
+  if (score >= 50) return 'fair';
+  if (score >= 30) return 'poor';
+  return 'critical';
+}
+
+// Feasibility status colors
+export const FEASIBILITY_COLORS = {
+  'Feasible':       { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/30' },
+  'Constrained':    { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/30' },
+  'Restricted':     { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/30' },
+  'Not Feasible':   { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/30' },
+};
+
+// Unit type colors for charts/visualization
+export const UNIT_TYPE_COLORS = {
+  studio:           '#a78bfa',
+  '1bed':           '#818cf8',
+  '2bed':           '#6366f1',
+  '3bed':           '#4f46e5',
+  house:            '#22c55e',
+  townhouse_2bed:   '#34d399',
+  townhouse_3bed:   '#10b981',
+  townhouse_4bed:   '#059669',
+  retail:           '#f59e0b',
+  retail_ground:    '#f59e0b',
+  office_small:     '#3b82f6',
+  office_medium:    '#2563eb',
+  warehouse_small:  '#64748b',
+  warehouse_large:  '#475569',
+  office_industrial:'#94a3b8',
+};
+
+// Premium suburbs where generic cost/revenue assumptions are likely inaccurate
+export const LUXURY_SUBURBS = [
+  'BANTRY BAY', 'CLIFTON', 'CAMPS BAY', 'LLANDUDNO', 'FRESNAYE',
+  'CONSTANTIA', 'BISHOPSCOURT', 'HIGGOVALE', 'ORANJEZICHT',
+  'CAMPS BAY', 'V&A WATERFRONT',
+];
+
 // Cape Town center
 export const CT_CENTER = [-33.925, 18.475];
 export const CT_ZOOM = 11;

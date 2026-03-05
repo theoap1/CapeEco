@@ -13,13 +13,13 @@ jobs:
       postgres:
         image: postgis/postgis:17-3.5
         env:
-          POSTGRES_USER: capeeco_user
-          POSTGRES_PASSWORD: capeeco_pass
-          POSTGRES_DB: capeeco
+          POSTGRES_USER: siteline_user
+          POSTGRES_PASSWORD: siteline_pass
+          POSTGRES_DB: siteline
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U capeeco_user"
+          --health-cmd "pg_isready -U siteline_user"
           --health-interval 5s
           --health-retries 5
 
@@ -37,15 +37,16 @@ jobs:
         run: pip install -r requirements.txt pytest
 
       - name: Apply schema
-        run: PGPASSWORD=capeeco_pass psql -h localhost -U capeeco_user -d capeeco -f scripts/schema.sql
+        run: PGPASSWORD=siteline_pass psql -h localhost -U siteline_user -d siteline -f scripts/schema.sql
 
       - name: Run tests
         env:
-          DATABASE_URL: postgresql://capeeco_user:capeeco_pass@localhost:5432/capeeco
+          DATABASE_URL: postgresql://siteline_user:siteline_pass@localhost:5432/siteline
+          SITELINE_SCHEMA: siteline
           PGHOST: localhost
           PGPORT: "5432"
-          PGUSER: capeeco_user
-          PGPASSWORD: capeeco_pass
+          PGUSER: siteline_user
+          PGPASSWORD: siteline_pass
         run: pytest tests/ -v --tb=short || true  # tests require loaded data, allow failure for now
 
   build-frontend:
@@ -67,4 +68,4 @@ jobs:
         uses: bervProject/railway-deploy@main
         with:
           railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          service: capeeco-api
+          service: web

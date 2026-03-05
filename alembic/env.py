@@ -32,8 +32,8 @@ def run_migrations_online():
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        # Ensure search_path includes capeeco schema
-        connection.execute(text("SET search_path TO capeeco, public"))
+        # Ensure search_path includes siteline schema
+        connection.execute(text("SET search_path TO siteline, public"))
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()

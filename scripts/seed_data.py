@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CapeEco Database Seeder
+Siteline Database Seeder
 
 Ensures PostGIS extensions exist, schema is applied, and seeds lookup/sample
 data for smoke testing. Safe to run multiple times (idempotent).
@@ -22,10 +22,10 @@ log = logging.getLogger(__name__)
 
 DB_URL = os.environ.get(
     "DATABASE_URL",
-    f"postgresql://{os.environ.get('PGUSER', os.environ.get('USER', 'postgres'))}@localhost:5432/capeeco",
+    f"postgresql://{os.environ.get('PGUSER', os.environ.get('USER', 'postgres'))}@localhost:5432/siteline",
 )
 
-SCHEMA = "capeeco"
+SCHEMA = os.environ.get("SITELINE_SCHEMA", "siteline")
 ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -47,7 +47,7 @@ def ensure_postgis(conn):
 
 
 def ensure_schema(conn):
-    """Check if capeeco schema exists, apply schema.sql if not."""
+    """Check if siteline schema exists, apply schema.sql if not."""
     result = conn.execute(text(
         "SELECT 1 FROM information_schema.schemata WHERE schema_name = :s"
     ), {"s": SCHEMA}).fetchone()

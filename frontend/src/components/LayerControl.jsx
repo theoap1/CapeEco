@@ -2,11 +2,19 @@ import { Layers, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { CBA_COLORS } from '../utils/constants';
 
-export default function LayerControl({ layers, onToggle }) {
+export default function LayerControl({ layers, onToggle, position = 'bottom-right' }) {
   const [open, setOpen] = useState(false);
 
+  const posClass = position === 'top-left'
+    ? 'absolute top-3 left-3 z-[1000]'
+    : 'absolute bottom-6 right-3 z-[1000]';
+
+  const popoverClass = position === 'top-left'
+    ? 'absolute top-12 left-0 w-56 bg-white/95 dark:bg-gray-800/95 backdrop-blur rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 space-y-1'
+    : 'absolute bottom-12 right-0 w-56 bg-white/95 dark:bg-gray-800/95 backdrop-blur rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 space-y-1';
+
   return (
-    <div className="absolute bottom-6 right-3 z-[1000]">
+    <div className={posClass}>
       <button
         onClick={() => setOpen(!open)}
         className="w-10 h-10 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur
@@ -16,8 +24,7 @@ export default function LayerControl({ layers, onToggle }) {
       </button>
 
       {open && (
-        <div className="absolute bottom-12 right-0 w-56 bg-white/95 dark:bg-gray-800/95 backdrop-blur
-                        rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 space-y-1">
+        <div className={popoverClass}>
           <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
             Overlays
           </div>

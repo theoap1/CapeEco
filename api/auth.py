@@ -1,5 +1,5 @@
 """
-CapeEco — JWT authentication utilities.
+Siteline — JWT authentication utilities.
 
 Provides password hashing, JWT token creation/verification, and FastAPI
 dependency for extracting the current user from a Bearer token.
@@ -12,13 +12,15 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from sqlalchemy import text
+
+from api.db import get_engine, SCHEMA
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-SECRET_KEY = os.environ.get("JWT_SECRET", "capeeco-dev-secret-change-in-prod")
+SECRET_KEY = os.environ.get("JWT_SECRET", "siteline-dev-secret-change-in-prod")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 24h default
 
@@ -96,12 +98,10 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
 
-    # Import engine at call time to avoid circular imports
-    from api.main import engine
-
+    engine = get_engine()
     with engine.connect() as conn:
         row = conn.execute(
-            text("SELECT id, email, full_name, is_active, created_at FROM capeeco.users WHERE id = :id"),
+            text(f"SELECT id, email, full_name, is_active, created_at FROM {SCHEMA}.users WHERE id = :id"),
             {"id": user_id},
         ).fetchone()
 

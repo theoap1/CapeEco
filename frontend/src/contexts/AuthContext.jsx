@@ -7,10 +7,9 @@ const api = axios.create({ baseURL: '/api' });
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(() => localStorage.getItem('capeeco_token'));
+  const [token, setToken] = useState(() => localStorage.getItem('siteline_token'));
   const [loading, setLoading] = useState(true);
 
-  // On mount, validate existing token
   useEffect(() => {
     if (!token) {
       setLoading(false);
@@ -19,8 +18,7 @@ export function AuthProvider({ children }) {
     api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => setUser(r.data))
       .catch(() => {
-        // Token expired or invalid
-        localStorage.removeItem('capeeco_token');
+        localStorage.removeItem('siteline_token');
         setToken(null);
         setUser(null);
       })
@@ -30,7 +28,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
     const { access_token, user: userData } = res.data;
-    localStorage.setItem('capeeco_token', access_token);
+    localStorage.setItem('siteline_token', access_token);
     setToken(access_token);
     setUser(userData);
     return userData;
@@ -39,14 +37,14 @@ export function AuthProvider({ children }) {
   const register = useCallback(async (email, password, fullName) => {
     const res = await api.post('/auth/register', { email, password, full_name: fullName });
     const { access_token, user: userData } = res.data;
-    localStorage.setItem('capeeco_token', access_token);
+    localStorage.setItem('siteline_token', access_token);
     setToken(access_token);
     setUser(userData);
     return userData;
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('capeeco_token');
+    localStorage.removeItem('siteline_token');
     setToken(null);
     setUser(null);
   }, []);
